@@ -22,5 +22,11 @@
     "prefix": "tools.ozone",
     "outdir": "api/ozone",
     "import": "github.com/bluesky-social/indigo/api/ozone"
+  },
+  {
+    "package": "foodios",
+    "prefix": "app.foodios",
+    "outdir": "api/foodios",
+    "import": "github.com/bluesky-social/indigo/api/foodios"
   }
 ]

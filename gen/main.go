@@ -18,6 +18,8 @@ import (
 	"github.com/bluesky-social/indigo/util/labels"
 
 	cbg "github.com/whyrusleeping/cbor-gen"
+
+	foodios "github.com/bluesky-social/indigo/api/foodios"
 )
 
 func main() {
@@ -43,6 +45,16 @@ func main() {
 	}
 
 	if err := genCfg.WriteMapEncodersToFile("util/labels/cbor_gen.go", "labels", labels.UnsignedLabel{}); err != nil {
+		panic(err)
+	}
+	
+	if err := genCfg.WriteMapEncodersToFile("api/foodios/cbor_gen.go", "foodios", 
+		foodios.FeedRecipePost{},
+		foodios.FeedRecipeRevision{},
+		foodios.FeedRecipeRevision_Ingredient{},
+		foodios.FeedRecipeRevision_Step{},
+		); 
+		err != nil {
 		panic(err)
 	}
 
