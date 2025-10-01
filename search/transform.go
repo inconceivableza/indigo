@@ -11,6 +11,8 @@ import (
 	"github.com/bluesky-social/indigo/atproto/syntax"
 
 	"github.com/rivo/uniseg"
+
+	foodios "github.com/bluesky-social/indigo/api/foodios"
 )
 
 type ProfileDoc struct {
@@ -53,6 +55,34 @@ type PostDoc struct {
 	Emoji             []string `json:"emoji,omitempty"`
 }
 
+type RecipeRevisionDoc struct {
+	DocIndexTs         string `json:"doc_index_ts"`
+	DID                string    `json:"did"`
+	RecordRkey         string    `json:"record_rkey"`
+	RecordCID          string    `json:"record_cid"`
+	Collection         string    `json:"collection"`
+	CreatedAt          *string `json:"created_at"`
+	RecipePostURI      string    `json:"recipe_post_uri"`
+	Title              string    `json:"title"`
+	TitleJa            string    `json:"title_ja,omitempty"`
+	Text               string    `json:"text"`
+	TextJa             string    `json:"text_ja,omitempty"`
+	IngredientName     []string  `json:"ingredient_name"`
+	IngredientNameJa   []string  `json:"ingredient_name_ja,omitempty"`
+	StepText           []string  `json:"step_text"`
+	StepTextJa         []string  `json:"step_text_ja,omitempty"`
+	LangCode           string    `json:"lang_code,omitempty"`
+	LangCodeIso2       string    `json:"lang_code_iso2,omitempty"`
+	EmbedAturi         []string  `json:"embed_aturi,omitempty"`
+	EmbedImgCount      int       `json:"embed_img_count,omitempty"`
+	EmbedImgAltText    []string  `json:"embed_img_alt_text,omitempty"`
+	EmbedImgAltTextJa  []string  `json:"embed_img_alt_text_ja,omitempty"`
+	SelfLabel          []string  `json:"self_label,omitempty"`
+	Url                []string  `json:"url,omitempty"`
+	Domain             []string  `json:"domain,omitempty"`
+	Tag                []string  `json:"tag,omitempty"`
+}
+
 // Returns the search index document ID (`_id`) for this document.
 //
 // This identifier should be URL safe and not contain a slash ("/").
@@ -65,6 +95,10 @@ func (d *ProfileDoc) DocId() string {
 // This identifier should be URL safe and not contain a slash ("/").
 func (d *PostDoc) DocId() string {
 	return d.DID + "_" + d.RecordRkey
+}
+
+func (d*RecipeRevisionDoc) DocId() string {
+	return d.DID + "_" + d.RecordRkey 
 }
 
 func TransformProfile(profile *appbsky.ActorProfile, ident *identity.Identity, cid string) ProfileDoc {
@@ -100,6 +134,51 @@ func TransformProfile(profile *appbsky.ActorProfile, ident *identity.Identity, c
 		HasAvatar:   profile.Avatar != nil,
 		HasBanner:   profile.Banner != nil,
 	}
+}
+
+
+
+// TODO: define interface containing shared fields between posts and recipes for indexing the common fields
+func TransformRecipe(post *foodios.FeedRecipeRevision, did syntax.DID, rkey, cid string) RecipeRevisionDoc  {
+	var ingredients = make([]string, len(post.Ingredients))
+	for _, ingredient := range post.Ingredients {
+		ingredients = append(ingredients, ingredient.Name)
+	}
+
+	var steps = make([]string, len(post.Steps))
+	for _, step := range post.Steps {
+		steps = append(steps, step.Text)
+	}
+
+	doc := RecipeRevisionDoc{
+		DocIndexTs:        syntax.DatetimeNow().String(),
+		DID:               did.String(),
+		RecipePostURI:     post.RecipePostRef.Uri,	
+		RecordRkey:        rkey,
+		RecordCID:         cid,
+		
+		Title: post.Title,
+		Text: post.Text,
+		IngredientName: ingredients,
+		StepText: steps,
+	}
+
+	if post.CreatedAt != "" {
+		dt, err := syntax.ParseDatetime(post.CreatedAt)
+		if nil == err { // *not* an error
+			// not more than a few minutes in the future
+			if time.Since(dt.Time()) >= -1*5*time.Minute {
+				s := dt.String()
+				doc.CreatedAt = &s
+			} else {
+				slog.Warn("rejecting future post CreatedAt", "datetime", dt.String(), "did", did.String(), "rkey", rkey)
+				s := syntax.DatetimeNow().String()
+				doc.CreatedAt = &s
+			}
+		}
+	}
+
+	return doc
 }
 
 func TransformPost(post *appbsky.FeedPost, did syntax.DID, rkey, cid string) PostDoc {

@@ -282,26 +282,38 @@ func (s *Server) SearchPosts(ctx context.Context, params *PostSearchParams) (*ap
 	ctx, span := tracer.Start(ctx, "SearchPosts")
 	defer span.End()
 
-	resp, err := DoSearchPosts(ctx, s.dir, s.escli, s.postIndex, params)
+	resp, err := DoSearchPosts(ctx, s.dir, s.escli, []string{s.recipeIndex, s.postIndex}, params)
 	if err != nil {
 		return nil, err
 	}
 
 	posts := []*appbsky.UnspeccedDefs_SkeletonSearchPost{}
 	for _, r := range resp.Hits.Hits {
-		var doc PostDoc
-		if err := json.Unmarshal(r.Source, &doc); err != nil {
-			return nil, fmt.Errorf("decoding post doc from search response: %w", err)
-		}
+		switch r.Index {
+		case s.postIndex:
+			var doc PostDoc
+			if err := json.Unmarshal(r.Source, &doc); err != nil {
+				return nil, fmt.Errorf("decoding post doc from search response: %w", err)
+			}
 
-		did, err := syntax.ParseDID(doc.DID)
-		if err != nil {
-			return nil, fmt.Errorf("invalid DID in indexed document: %w", err)
-		}
-
-		posts = append(posts, &appbsky.UnspeccedDefs_SkeletonSearchPost{
-			Uri: fmt.Sprintf("at://%s/app.bsky.feed.post/%s", did, doc.RecordRkey),
-		})
+			did, err := syntax.ParseDID(doc.DID)
+			if err != nil {
+				return nil, fmt.Errorf("invalid DID in indexed document: %w", err)
+			}
+			posts = append(posts, &appbsky.UnspeccedDefs_SkeletonSearchPost{
+				Uri: fmt.Sprintf("at://%s/app.bsky.feed.post/%s", did, doc.RecordRkey),
+			})
+		case s.recipeIndex:	
+			var doc RecipeRevisionDoc
+			if err := json.Unmarshal(r.Source, &doc); err != nil {
+				return nil, fmt.Errorf("decoding recipe doc from search response: %w", err)
+			}
+			posts = append(posts, &appbsky.UnspeccedDefs_SkeletonSearchPost{
+				Uri: doc.RecipePostURI,
+			})
+		default:
+			fmt.Printf("Unexpected index %s", s.postIndex)
+		}		
 	}
 
 	out := appbsky.UnspeccedSearchPostsSkeleton_Output{Posts: posts}

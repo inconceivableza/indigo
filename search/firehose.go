@@ -22,6 +22,8 @@ import (
 	"github.com/carlmjohnson/versioninfo"
 	"github.com/gorilla/websocket"
 	"github.com/ipfs/go-cid"
+
+	foodios "github.com/bluesky-social/indigo/api/foodios"
 )
 
 func (idx *Indexer) getLastCursor() (int64, error) {
@@ -50,6 +52,7 @@ func (idx *Indexer) RunIndexer(ctx context.Context) error {
 	// Start the indexer batch workers
 	go idx.runPostIndexer(ctx)
 	go idx.runProfileIndexer(ctx)
+	go idx.runRecipeIndexer(ctx)
 
 	err = idx.bfs.LoadJobs(ctx)
 	if err != nil {
@@ -189,13 +192,21 @@ func (idx *Indexer) discoverRepos() {
 	log.Info("finished repo discovery", "totalJobs", total, "totalErrored", totalErrored)
 }
 
+
+
 func (idx *Indexer) handleCreateOrUpdate(ctx context.Context, rawDID string, rev string, path string, recB *[]byte, rcid *cid.Cid) error {
 	logger := idx.logger.With("func", "handleCreateOrUpdate", "did", rawDID, "rev", rev, "path", path)
-	// Since this gets called in a backfill job, we need to check if the path is a post or profile
-	if !strings.Contains(path, "app.bsky.feed.post") && !strings.Contains(path, "app.bsky.actor.profile") {
+	var shouldIndex = false
+		for _, collection := range indexedCollections {
+			if strings.HasPrefix(path, collection) {
+				shouldIndex = true
+				break
+			}
+		}
+	
+	if !shouldIndex {
 		return nil
 	}
-
 	did, err := syntax.ParseDID(rawDID)
 	if err != nil {
 		return fmt.Errorf("bad DID syntax in event: %w", err)
@@ -219,6 +230,34 @@ func (idx *Indexer) handleCreateOrUpdate(ctx context.Context, rawDID string, rev
 	}
 
 	switch rec := rec.(type) {
+	case *foodios.FeedRecipeRevision:
+		rkey, err := syntax.ParseTID(parts[1])
+		if err != nil {
+			logger.Warn("skipping post record with non-TID rkey")
+			return nil
+		}
+
+		// Delete the previous version from the index
+		if rec.ParentRevisionRef != nil {
+			var parentRevisionUri, err = syntax.ParseATURI(rec.ParentRevisionRef.Uri)
+			if err == nil {
+				err = idx.deletePost(ctx, did, parentRevisionUri.Path()) 
+				if err != nil {
+					logger.Warn("Failed to delete parent revision", "parent uri", rec.ParentRevisionRef.Uri)
+				}
+			}
+		}
+
+		job := RecipeRevisionIndexJob{
+			did:    did,
+			record: rec,
+			rcid:   *rcid,
+			rkey:   rkey.String(),
+		}
+
+		// Send the job to the bulk indexer
+		idx.recipeQueue <- &job
+		recipesIndexed.Inc()
 	case *bsky.FeedPost:
 		rkey, err := syntax.ParseTID(parts[1])
 		if err != nil {
@@ -273,10 +312,10 @@ func (idx *Indexer) handleDelete(ctx context.Context, rawDID, rev, path string) 
 	if err != nil {
 		return fmt.Errorf("invalid DID in event: %w", err)
 	}
-
 	switch {
 	// TODO: handle profile deletes, its an edge case, but worth doing still
-	case strings.Contains(path, "app.bsky.feed.post"):
+	case strings.Contains(path, "app.bsky.feed.post") || 
+		 strings.Contains(path, "app.foodios.feed.recipeRevision"):
 		if err := idx.deletePost(ctx, did, path); err != nil {
 			return err
 		}
@@ -286,6 +325,12 @@ func (idx *Indexer) handleDelete(ctx context.Context, rawDID, rev, path string) 
 	}
 
 	return nil
+}
+
+var indexedCollections = []string{
+	"app.bsky.feed.post",
+	"app.bsky.actor.profile",
+	"app.foodios.feed.recipeRevision",
 }
 
 func (idx *Indexer) processTooBigCommit(ctx context.Context, evt *comatproto.SyncSubscribeRepos_Commit) error {
@@ -315,7 +360,15 @@ func (idx *Indexer) processTooBigCommit(ctx context.Context, evt *comatproto.Syn
 	}
 
 	return r.ForEach(ctx, "", func(k string, v cid.Cid) error {
-		if strings.HasPrefix(k, "app.bsky.feed.post") || strings.HasPrefix(k, "app.bsky.actor.profile") {
+		var shouldIndex = false
+		for _, collection := range indexedCollections {
+			if strings.HasPrefix(k, collection) {
+				shouldIndex = true
+				break
+			}
+		}
+		fmt.Printf("Index %v %v", k, shouldIndex)
+		if shouldIndex {
 			rcid, rec, err := r.GetRecord(ctx, k)
 			if err != nil {
 				// TODO: handle this case (instead of return nil)
@@ -330,13 +383,29 @@ func (idx *Indexer) processTooBigCommit(ctx context.Context, evt *comatproto.Syn
 			}
 
 			switch rec := rec.(type) {
-			case *bsky.FeedPost:
+			case *foodios.FeedRecipeRevision:
 				rkey, err := syntax.ParseTID(parts[1])
 				if err != nil {
 					logger.Warn("skipping post record with non-TID rkey")
 					return nil
 				}
 
+				job := RecipeRevisionIndexJob{
+					did:    did,
+					record: rec,
+					rcid:   rcid,
+					rkey:   rkey.String(),
+				}
+
+				// Send the job to the bulk indexer
+				idx.recipeQueue <- &job
+			case *bsky.FeedPost:
+				rkey, err := syntax.ParseTID(parts[1])
+				if err != nil {
+					logger.Warn("skipping post record with non-TID rkey")
+					return nil
+				}
+				
 				job := PostIndexJob{
 					did:    did,
 					record: rec,

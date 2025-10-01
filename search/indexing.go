@@ -25,12 +25,15 @@ import (
 
 	es "github.com/opensearch-project/opensearch-go/v2"
 	esapi "github.com/opensearch-project/opensearch-go/v2/opensearchapi"
+
+	foodios "github.com/bluesky-social/indigo/api/foodios"
 )
 
 type Indexer struct {
 	escli        *es.Client
 	postIndex    string
 	profileIndex string
+	recipeIndex  string
 	db           *gorm.DB
 	relayhost    string
 	relayXRPC    *xrpc.Client
@@ -46,6 +49,7 @@ type Indexer struct {
 	indexLimiter  *rate.Limiter
 	profileQueue  chan *ProfileIndexJob
 	postQueue     chan *PostIndexJob
+	recipeQueue   chan *RecipeRevisionIndexJob
 	pagerankQueue chan *PagerankIndexJob
 }
 
@@ -53,6 +57,7 @@ type IndexerConfig struct {
 	RelayHost           string
 	ProfileIndex        string
 	PostIndex           string
+	RecipeIndex         string
 	Logger              *slog.Logger
 	RelaySyncRateLimit  int
 	IndexMaxConcurrency int
@@ -69,6 +74,13 @@ type ProfileIndexJob struct {
 type PostIndexJob struct {
 	did    syntax.DID
 	record *appbsky.FeedPost
+	rcid   cid.Cid
+	rkey   string
+}
+
+type RecipeRevisionIndexJob struct {
+	did    syntax.DID
+	record *foodios.FeedRecipeRevision
 	rcid   cid.Cid
 	rkey   string
 }
@@ -107,6 +119,7 @@ func NewIndexer(db *gorm.DB, escli *es.Client, dir identity.Directory, config In
 		escli:               escli,
 		profileIndex:        config.ProfileIndex,
 		postIndex:           config.PostIndex,
+		recipeIndex: 		 config.RecipeIndex,
 		db:                  db,
 		relayhost:           config.RelayHost,
 		relayXRPC:           relayXRPC,
@@ -117,6 +130,7 @@ func NewIndexer(db *gorm.DB, escli *es.Client, dir identity.Directory, config In
 		indexLimiter:  limiter,
 		profileQueue:  make(chan *ProfileIndexJob, 1000),
 		postQueue:     make(chan *PostIndexJob, 1000),
+		recipeQueue:   make(chan *RecipeRevisionIndexJob, 1000),	
 		pagerankQueue: make(chan *PagerankIndexJob, 1000),
 	}
 
@@ -136,7 +150,8 @@ func NewIndexer(db *gorm.DB, escli *es.Client, dir identity.Directory, config In
 	} else {
 		opts.ParallelRecordCreates = 20
 	}
-	opts.NSIDFilter = "app.bsky."
+	// TODO: may need separate backfiller, or move recipe post under bsky
+	opts.NSIDFilter = "app."
 	bf := backfill.NewBackfiller(
 		"search",
 		bfstore,
@@ -160,6 +175,9 @@ var palomarPostSchemaJSON string
 //go:embed profile_schema.json
 var palomarProfileSchemaJSON string
 
+//go:embed recipe_schema.json
+var palomarRecipeSchemaJSON string
+
 func (idx *Indexer) EnsureIndices(ctx context.Context) error {
 	indices := []struct {
 		Name       string
@@ -167,6 +185,7 @@ func (idx *Indexer) EnsureIndices(ctx context.Context) error {
 	}{
 		{Name: idx.postIndex, SchemaJSON: palomarPostSchemaJSON},
 		{Name: idx.profileIndex, SchemaJSON: palomarProfileSchemaJSON},
+		{Name: idx.recipeIndex, SchemaJSON: palomarRecipeSchemaJSON},
 	}
 	for _, index := range indices {
 		resp, err := idx.escli.Indices.Exists([]string{index.Name})
@@ -198,6 +217,50 @@ func (idx *Indexer) EnsureIndices(ctx context.Context) error {
 		}
 	}
 	return nil
+}
+
+func (idx *Indexer) runRecipeIndexer(ctx context.Context) {
+	ctx, span := tracer.Start(ctx, "runRecipeIndexer")
+	defer span.End()
+
+	// Batch up to 1000 posts at a time, or every 5 seconds
+	tick := time.NewTicker(5 * time.Second)
+	defer tick.Stop()
+
+	var posts []*RecipeRevisionIndexJob
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-tick.C:
+			if len(posts) > 0 {
+				err := idx.indexLimiter.WaitN(ctx, len(posts))
+				if err != nil {
+					idx.logger.Error("failed to wait for rate limiter", "err", err)
+					continue
+				}
+				err = idx.indexRecipes(ctx, posts)
+				if err != nil {
+					idx.logger.Error("failed to index posts", "err", err)
+				}
+				posts = posts[:0]
+			}
+		case job := <-idx.recipeQueue:
+			posts = append(posts, job)
+			if len(posts) >= 1000 {
+				err := idx.indexLimiter.WaitN(ctx, len(posts))
+				if err != nil {
+					idx.logger.Error("failed to wait for rate limiter", "err", err)
+					continue
+				}
+				err = idx.indexRecipes(ctx, posts)
+				if err != nil {
+					idx.logger.Error("failed to index posts", "err", err)
+				}
+				posts = posts[:0]
+			}
+		}
+	}
 }
 
 func (idx *Indexer) runPostIndexer(ctx context.Context) {
@@ -352,8 +415,19 @@ func (idx *Indexer) deletePost(ctx context.Context, did syntax.DID, recordPath s
 
 	docID := fmt.Sprintf("%s_%s", did.String(), rkey)
 	logger.Info("deleting post from index", "docID", docID)
+
+	var index = ""
+	switch parts[0] {
+	case "app.bsky.feed.post":
+		index = idx.postIndex
+	case "app.foodios.feed.recipeRevision":
+		index = idx.recipeIndex
+	default:
+		return fmt.Errorf("failed to delete record: unknown collection: %s", recordPath)
+	}
+
 	req := esapi.DeleteRequest{
-		Index:      idx.postIndex,
+		Index:      index,
 		DocumentID: docID,
 		Refresh:    "true",
 	}
@@ -425,6 +499,56 @@ func (idx *Indexer) indexPosts(ctx context.Context, jobs []*PostIndexJob) error 
 	}
 
 	log.Info("indexed posts", "num_posts", len(jobs), "duration", time.Since(start))
+
+	return nil
+}
+
+func (idx *Indexer) indexRecipes(ctx context.Context, jobs []*RecipeRevisionIndexJob) error {
+	ctx, span := tracer.Start(ctx, "indexRecipes")
+	defer span.End()
+	span.SetAttributes(attribute.Int("num_recipes", len(jobs)))
+
+	log := idx.logger.With("op", "indexRecipes")
+	start := time.Now()
+
+	var buf bytes.Buffer
+	for i := range jobs {
+		job := jobs[i]
+		doc := TransformRecipe(job.record, job.did, job.rkey, job.rcid.String())
+		docBytes, err := json.Marshal(doc)
+		if err != nil {
+			log.Warn("failed to marshal recipe", "err", err)
+			return err
+		}
+
+		indexScript := []byte(fmt.Sprintf(`{"index":{"_id":"%s"}}%s`, doc.DocId(), "\n"))
+		docBytes = append(docBytes, "\n"...)
+
+		buf.Grow(len(indexScript) + len(docBytes))
+		buf.Write(indexScript)
+		buf.Write(docBytes)
+	}
+
+	log.Info("indexing recipes", "num_recipes", len(jobs))
+
+	res, err := idx.escli.Bulk(bytes.NewReader(buf.Bytes()), idx.escli.Bulk.WithIndex(idx.recipeIndex))
+	if err != nil {
+		log.Warn("failed to send bulk indexing request", "err", err)
+		return fmt.Errorf("failed to send bulk indexing request: %w", err)
+	}
+	defer res.Body.Close()
+
+	if res.IsError() {
+		body, err := io.ReadAll(res.Body)
+		if err != nil {
+			log.Warn("failed to read bulk indexing response", "err", err)
+			return fmt.Errorf("failed to read bulk indexing response: %w", err)
+		}
+		log.Warn("opensearch bulk indexing error", "status_code", res.StatusCode, "response", res, "body", string(body))
+		return fmt.Errorf("bulk indexing error, code=%d", res.StatusCode)
+	}
+
+	log.Info("indexed recipes", "num_recipes", len(jobs), "duration", time.Since(start))
 
 	return nil
 }
