@@ -12,9 +12,10 @@ import (
 
 // FeedGetLikes_Like is a "like" in the app.bsky.feed.getLikes schema.
 type FeedGetLikes_Like struct {
-	Actor     *ActorDefs_ProfileView `json:"actor" cborgen:"actor"`
-	CreatedAt string                 `json:"createdAt" cborgen:"createdAt"`
-	IndexedAt string                 `json:"indexedAt" cborgen:"indexedAt"`
+	Actor       *ActorDefs_ProfileView `json:"actor" cborgen:"actor"`
+	CreatedAt   string                 `json:"createdAt" cborgen:"createdAt"`
+	IndexedAt   string                 `json:"indexedAt" cborgen:"indexedAt"`
+	RevisionUri *string                `json:"revisionUri,omitempty" cborgen:"revisionUri,omitempty"`
 }
 
 // FeedGetLikes_Output is the output of a app.bsky.feed.getLikes call.

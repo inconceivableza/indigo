@@ -12,10 +12,16 @@ import (
 
 // FeedGetRepostedBy_Output is the output of a app.bsky.feed.getRepostedBy call.
 type FeedGetRepostedBy_Output struct {
-	Cid        *string                  `json:"cid,omitempty" cborgen:"cid,omitempty"`
-	Cursor     *string                  `json:"cursor,omitempty" cborgen:"cursor,omitempty"`
-	RepostedBy []*ActorDefs_ProfileView `json:"repostedBy" cborgen:"repostedBy"`
-	Uri        string                   `json:"uri" cborgen:"uri"`
+	Cid        *string                         `json:"cid,omitempty" cborgen:"cid,omitempty"`
+	Cursor     *string                         `json:"cursor,omitempty" cborgen:"cursor,omitempty"`
+	RepostedBy []*FeedGetRepostedBy_RepostInfo `json:"repostedBy" cborgen:"repostedBy"`
+	Uri        string                          `json:"uri" cborgen:"uri"`
+}
+
+// FeedGetRepostedBy_RepostInfo is a "repostInfo" in the app.bsky.feed.getRepostedBy schema.
+type FeedGetRepostedBy_RepostInfo struct {
+	ProfileView *ActorDefs_ProfileView `json:"profileView" cborgen:"profileView"`
+	RevisionUri *string                `json:"revisionUri,omitempty" cborgen:"revisionUri,omitempty"`
 }
 
 // FeedGetRepostedBy calls the XRPC method "app.bsky.feed.getRepostedBy".
