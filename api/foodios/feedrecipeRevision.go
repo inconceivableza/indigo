@@ -29,9 +29,9 @@ type FeedRecipeRevision struct {
 	CreatedAt string                    `json:"createdAt" cborgen:"createdAt"`
 	Embed     *FeedRecipeRevision_Embed `json:"embed,omitempty" cborgen:"embed,omitempty"`
 	// facets: Annotations of text (mentions, URLs, hashtags, etc)
-	Facets       []*appbskytypes.RichtextFacet            `json:"facets,omitempty" cborgen:"facets,omitempty"`
-	Ingredients  []*FeedRecipeRevision_Ingredient         `json:"ingredients" cborgen:"ingredients"`
-	Instructions []*FeedRecipeRevision_InstructionSection `json:"instructions" cborgen:"instructions"`
+	Facets              []*appbskytypes.RichtextFacet            `json:"facets,omitempty" cborgen:"facets,omitempty"`
+	Ingredients         []*FeedRecipeRevision_Ingredient         `json:"ingredients" cborgen:"ingredients"`
+	InstructionSections []*FeedRecipeRevision_InstructionSection `json:"instructionSections" cborgen:"instructionSections"`
 	// labels: Self-label values for this post. Effectively content warnings.
 	Labels *FeedRecipeRevision_Labels `json:"labels,omitempty" cborgen:"labels,omitempty"`
 	// langs: Indicates human language of post primary text content.

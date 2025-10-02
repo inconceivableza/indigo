@@ -593,32 +593,6 @@ func (t *FeedRecipeRevision) MarshalCBOR(w io.Writer) error {
 		}
 	}
 
-	// t.Instructions ([]*foodios.FeedRecipeRevision_InstructionSection) (slice)
-	if len("instructions") > 1000000 {
-		return xerrors.Errorf("Value in field \"instructions\" was too long")
-	}
-
-	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("instructions"))); err != nil {
-		return err
-	}
-	if _, err := cw.WriteString(string("instructions")); err != nil {
-		return err
-	}
-
-	if len(t.Instructions) > 8192 {
-		return xerrors.Errorf("Slice value in field t.Instructions was too long")
-	}
-
-	if err := cw.WriteMajorTypeHeader(cbg.MajArray, uint64(len(t.Instructions))); err != nil {
-		return err
-	}
-	for _, v := range t.Instructions {
-		if err := v.MarshalCBOR(cw); err != nil {
-			return err
-		}
-
-	}
-
 	// t.RecipeCuisine ([]string) (slice)
 	if t.RecipeCuisine != nil {
 
@@ -761,6 +735,32 @@ func (t *FeedRecipeRevision) MarshalCBOR(w io.Writer) error {
 			return err
 		}
 	}
+
+	// t.InstructionSections ([]*foodios.FeedRecipeRevision_InstructionSection) (slice)
+	if len("instructionSections") > 1000000 {
+		return xerrors.Errorf("Value in field \"instructionSections\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("instructionSections"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("instructionSections")); err != nil {
+		return err
+	}
+
+	if len(t.InstructionSections) > 8192 {
+		return xerrors.Errorf("Slice value in field t.InstructionSections was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajArray, uint64(len(t.InstructionSections))); err != nil {
+		return err
+	}
+	for _, v := range t.InstructionSections {
+		if err := v.MarshalCBOR(cw); err != nil {
+			return err
+		}
+
+	}
 	return nil
 }
 
@@ -789,7 +789,7 @@ func (t *FeedRecipeRevision) UnmarshalCBOR(r io.Reader) (err error) {
 
 	n := extra
 
-	nameBuf := make([]byte, 17)
+	nameBuf := make([]byte, 19)
 	for i := uint64(0); i < n; i++ {
 		nameLen, ok, err := cbg.ReadFullStringIntoBuf(cr, nameBuf, 1000000)
 		if err != nil {
@@ -1169,55 +1169,6 @@ func (t *FeedRecipeRevision) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
-			// t.Instructions ([]*foodios.FeedRecipeRevision_InstructionSection) (slice)
-		case "instructions":
-
-			maj, extra, err = cr.ReadHeader()
-			if err != nil {
-				return err
-			}
-
-			if extra > 8192 {
-				return fmt.Errorf("t.Instructions: array too large (%d)", extra)
-			}
-
-			if maj != cbg.MajArray {
-				return fmt.Errorf("expected cbor array")
-			}
-
-			if extra > 0 {
-				t.Instructions = make([]*FeedRecipeRevision_InstructionSection, extra)
-			}
-
-			for i := 0; i < int(extra); i++ {
-				{
-					var maj byte
-					var extra uint64
-					var err error
-					_ = maj
-					_ = extra
-					_ = err
-
-					{
-
-						b, err := cr.ReadByte()
-						if err != nil {
-							return err
-						}
-						if b != cbg.CborNull[0] {
-							if err := cr.UnreadByte(); err != nil {
-								return err
-							}
-							t.Instructions[i] = new(FeedRecipeRevision_InstructionSection)
-							if err := t.Instructions[i].UnmarshalCBOR(cr); err != nil {
-								return xerrors.Errorf("unmarshaling t.Instructions[i] pointer: %w", err)
-							}
-						}
-
-					}
-
-				}
-			}
 			// t.RecipeCuisine ([]string) (slice)
 		case "recipeCuisine":
 
@@ -1377,6 +1328,55 @@ func (t *FeedRecipeRevision) UnmarshalCBOR(r io.Reader) (err error) {
 					}
 				}
 
+			}
+			// t.InstructionSections ([]*foodios.FeedRecipeRevision_InstructionSection) (slice)
+		case "instructionSections":
+
+			maj, extra, err = cr.ReadHeader()
+			if err != nil {
+				return err
+			}
+
+			if extra > 8192 {
+				return fmt.Errorf("t.InstructionSections: array too large (%d)", extra)
+			}
+
+			if maj != cbg.MajArray {
+				return fmt.Errorf("expected cbor array")
+			}
+
+			if extra > 0 {
+				t.InstructionSections = make([]*FeedRecipeRevision_InstructionSection, extra)
+			}
+
+			for i := 0; i < int(extra); i++ {
+				{
+					var maj byte
+					var extra uint64
+					var err error
+					_ = maj
+					_ = extra
+					_ = err
+
+					{
+
+						b, err := cr.ReadByte()
+						if err != nil {
+							return err
+						}
+						if b != cbg.CborNull[0] {
+							if err := cr.UnreadByte(); err != nil {
+								return err
+							}
+							t.InstructionSections[i] = new(FeedRecipeRevision_InstructionSection)
+							if err := t.InstructionSections[i].UnmarshalCBOR(cr); err != nil {
+								return xerrors.Errorf("unmarshaling t.InstructionSections[i] pointer: %w", err)
+							}
+						}
+
+					}
+
+				}
 			}
 
 		default:
