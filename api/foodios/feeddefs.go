@@ -4,6 +4,78 @@ package foodios
 
 // schema: app.foodios.feed.defs
 
+// FeedDefs_LicenseAllRights is a "licenseAllRights" in the app.foodios.feed.defs schema.
+//
+// RECORDTYPE: FeedDefs_LicenseAllRights
+type FeedDefs_LicenseAllRights struct {
+	LexiconTypeID string `json:"$type,const=app.foodios.feed.defs#licenseAllRights" cborgen:"$type,const=app.foodios.feed.defs#licenseAllRights"`
+	// licenseType: All rights reserved by the creator.
+	LicenseType *string `json:"licenseType,omitempty" cborgen:"licenseType,omitempty"`
+}
+
+// FeedDefs_LicenseCreativeCommonsBy is a "licenseCreativeCommonsBy" in the app.foodios.feed.defs schema.
+//
+// RECORDTYPE: FeedDefs_LicenseCreativeCommonsBy
+type FeedDefs_LicenseCreativeCommonsBy struct {
+	LexiconTypeID string `json:"$type,const=app.foodios.feed.defs#licenseCreativeCommonsBy" cborgen:"$type,const=app.foodios.feed.defs#licenseCreativeCommonsBy"`
+	// licenseType: Creative Commons Attribution 4.0 License.
+	LicenseType *string `json:"licenseType,omitempty" cborgen:"licenseType,omitempty"`
+}
+
+// FeedDefs_LicenseCreativeCommonsByNc is a "licenseCreativeCommonsByNc" in the app.foodios.feed.defs schema.
+//
+// RECORDTYPE: FeedDefs_LicenseCreativeCommonsByNc
+type FeedDefs_LicenseCreativeCommonsByNc struct {
+	LexiconTypeID string `json:"$type,const=app.foodios.feed.defs#licenseCreativeCommonsByNc" cborgen:"$type,const=app.foodios.feed.defs#licenseCreativeCommonsByNc"`
+	// licenseType: Creative Commons Attribution-NonCommercial 4.0 License.
+	LicenseType *string `json:"licenseType,omitempty" cborgen:"licenseType,omitempty"`
+}
+
+// FeedDefs_LicenseCreativeCommonsByNcSa is a "licenseCreativeCommonsByNcSa" in the app.foodios.feed.defs schema.
+//
+// RECORDTYPE: FeedDefs_LicenseCreativeCommonsByNcSa
+type FeedDefs_LicenseCreativeCommonsByNcSa struct {
+	LexiconTypeID string `json:"$type,const=app.foodios.feed.defs#licenseCreativeCommonsByNcSa" cborgen:"$type,const=app.foodios.feed.defs#licenseCreativeCommonsByNcSa"`
+	// licenseType: Creative Commons Attribution-NonCommercial-ShareAlike 4.0 License.
+	LicenseType *string `json:"licenseType,omitempty" cborgen:"licenseType,omitempty"`
+}
+
+// FeedDefs_LicenseCreativeCommonsBySa is a "licenseCreativeCommonsBySa" in the app.foodios.feed.defs schema.
+//
+// RECORDTYPE: FeedDefs_LicenseCreativeCommonsBySa
+type FeedDefs_LicenseCreativeCommonsBySa struct {
+	LexiconTypeID string `json:"$type,const=app.foodios.feed.defs#licenseCreativeCommonsBySa" cborgen:"$type,const=app.foodios.feed.defs#licenseCreativeCommonsBySa"`
+	// licenseType: Creative Commons Attribution-ShareAlike 4.0 License.
+	LicenseType *string `json:"licenseType,omitempty" cborgen:"licenseType,omitempty"`
+}
+
+// FeedDefs_LicensePublicDomain is a "licensePublicDomain" in the app.foodios.feed.defs schema.
+//
+// RECORDTYPE: FeedDefs_LicensePublicDomain
+type FeedDefs_LicensePublicDomain struct {
+	LexiconTypeID string `json:"$type,const=app.foodios.feed.defs#licensePublicDomain" cborgen:"$type,const=app.foodios.feed.defs#licensePublicDomain"`
+	// licenseType: Work dedicated to the public domain.
+	LicenseType *string `json:"licenseType,omitempty" cborgen:"licenseType,omitempty"`
+}
+
+// FeedDefs_PublicationTypeBook is a "publicationTypeBook" in the app.foodios.feed.defs schema.
+//
+// RECORDTYPE: FeedDefs_PublicationTypeBook
+type FeedDefs_PublicationTypeBook struct {
+	LexiconTypeID string `json:"$type,const=app.foodios.feed.defs#publicationTypeBook" cborgen:"$type,const=app.foodios.feed.defs#publicationTypeBook"`
+	// publicationType: Recipe from a published book.
+	PublicationType *string `json:"publicationType,omitempty" cborgen:"publicationType,omitempty"`
+}
+
+// FeedDefs_PublicationTypeMagazine is a "publicationTypeMagazine" in the app.foodios.feed.defs schema.
+//
+// RECORDTYPE: FeedDefs_PublicationTypeMagazine
+type FeedDefs_PublicationTypeMagazine struct {
+	LexiconTypeID string `json:"$type,const=app.foodios.feed.defs#publicationTypeMagazine" cborgen:"$type,const=app.foodios.feed.defs#publicationTypeMagazine"`
+	// publicationType: Recipe from a magazine.
+	PublicationType *string `json:"publicationType,omitempty" cborgen:"publicationType,omitempty"`
+}
+
 // FeedDefs_RecipeRevisionView is a "recipeRevisionView" in the app.foodios.feed.defs schema.
 type FeedDefs_RecipeRevisionView struct {
 	RevisionContent     *FeedRecipeRevision     `json:"revisionContent" cborgen:"revisionContent"`

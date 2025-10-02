@@ -4,7 +4,9 @@ package foodios
 
 // schema: app.foodios.feed.recipePost
 
-import util "github.com/bluesky-social/indigo/lex/util"
+import (
+	"github.com/bluesky-social/indigo/lex/util"
+)
 
 func init() {
 	util.RegisterType("app.foodios.feed.recipePost", &FeedRecipePost{})

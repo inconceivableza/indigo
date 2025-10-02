@@ -21,23 +21,162 @@ func init() {
 } //
 // RECORDTYPE: FeedRecipeRevision
 type FeedRecipeRevision struct {
-	LexiconTypeID string `json:"$type,const=app.foodios.feed.recipeRevision" cborgen:"$type,const=app.foodios.feed.recipeRevision"`
+	LexiconTypeID string                          `json:"$type,const=app.foodios.feed.recipeRevision" cborgen:"$type,const=app.foodios.feed.recipeRevision"`
+	Attribution   *FeedRecipeRevision_Attribution `json:"attribution,omitempty" cborgen:"attribution,omitempty"`
+	// cookingTime: Preparation time in minutes
+	CookingTime *string `json:"cookingTime,omitempty" cborgen:"cookingTime,omitempty"`
 	// createdAt: Client-declared timestamp when this post was originally created.
-	CreatedAt   string                           `json:"createdAt" cborgen:"createdAt"`
-	Embed       *FeedRecipeRevision_Embed        `json:"embed,omitempty" cborgen:"embed,omitempty"`
-	Images      *FeedRecipeRevision_Images       `json:"images,omitempty" cborgen:"images,omitempty"`
-	Ingredients []*FeedRecipeRevision_Ingredient `json:"ingredients" cborgen:"ingredients"`
+	CreatedAt string                    `json:"createdAt" cborgen:"createdAt"`
+	Embed     *FeedRecipeRevision_Embed `json:"embed,omitempty" cborgen:"embed,omitempty"`
+	// facets: Annotations of text (mentions, URLs, hashtags, etc)
+	Facets       []*appbskytypes.RichtextFacet            `json:"facets,omitempty" cborgen:"facets,omitempty"`
+	Ingredients  []*FeedRecipeRevision_Ingredient         `json:"ingredients" cborgen:"ingredients"`
+	Instructions []*FeedRecipeRevision_InstructionSection `json:"instructions" cborgen:"instructions"`
 	// labels: Self-label values for this post. Effectively content warnings.
 	Labels *FeedRecipeRevision_Labels `json:"labels,omitempty" cborgen:"labels,omitempty"`
 	// langs: Indicates human language of post primary text content.
-	Langs             []string                       `json:"langs,omitempty" cborgen:"langs,omitempty"`
+	Langs []string `json:"langs,omitempty" cborgen:"langs,omitempty"`
+	// name: The name/title of the recipe
+	Name      string                        `json:"name" cborgen:"name"`
+	Nutrition *FeedRecipeRevision_Nutrition `json:"nutrition,omitempty" cborgen:"nutrition,omitempty"`
+	// parentRevisionRef: Reference to the revision preceding this one (empty for the first revision)
 	ParentRevisionRef *comatprototypes.RepoStrongRef `json:"parentRevisionRef,omitempty" cborgen:"parentRevisionRef,omitempty"`
-	RecipePostRef     *comatprototypes.RepoStrongRef `json:"recipePostRef" cborgen:"recipePostRef"`
-	Steps             []*FeedRecipeRevision_Step     `json:"steps" cborgen:"steps"`
+	// prepTime: Preparation time in minutes
+	PrepTime       *string  `json:"prepTime,omitempty" cborgen:"prepTime,omitempty"`
+	RecipeCategory []string `json:"recipeCategory,omitempty" cborgen:"recipeCategory,omitempty"`
+	RecipeCuisine  []string `json:"recipeCuisine,omitempty" cborgen:"recipeCuisine,omitempty"`
+	// recipePostRef: Reference to the recipe post record for which this is a revision
+	RecipePostRef   *comatprototypes.RepoStrongRef      `json:"recipePostRef" cborgen:"recipePostRef"`
+	RecipeYield     *FeedRecipeRevision_QuantityAndUnit `json:"recipeYield,omitempty" cborgen:"recipeYield,omitempty"`
+	SuitableForDiet []string                            `json:"suitableForDiet,omitempty" cborgen:"suitableForDiet,omitempty"`
 	// tags: Additional hashtags, in addition to any included in post text and facets.
-	Tags  []string `json:"tags,omitempty" cborgen:"tags,omitempty"`
-	Text  string   `json:"text" cborgen:"text"`
-	Title string   `json:"title" cborgen:"title"`
+	Tags []string `json:"tags,omitempty" cborgen:"tags,omitempty"`
+	// text: Body providing a description of the recipe
+	Text string `json:"text" cborgen:"text"`
+}
+
+type FeedRecipeRevision_Attribution struct {
+	FeedRecipeRevision_OriginalAttribution    *FeedRecipeRevision_OriginalAttribution
+	FeedRecipeRevision_PersonAttribution      *FeedRecipeRevision_PersonAttribution
+	FeedRecipeRevision_PublicationAttribution *FeedRecipeRevision_PublicationAttribution
+	FeedRecipeRevision_WebsiteAttribution     *FeedRecipeRevision_WebsiteAttribution
+	FeedRecipeRevision_ShowAttribution        *FeedRecipeRevision_ShowAttribution
+	FeedRecipeRevision_ProductAttribution     *FeedRecipeRevision_ProductAttribution
+}
+
+func (t *FeedRecipeRevision_Attribution) MarshalJSON() ([]byte, error) {
+	if t.FeedRecipeRevision_OriginalAttribution != nil {
+		t.FeedRecipeRevision_OriginalAttribution.LexiconTypeID = "app.foodios.feed.recipeRevision#originalAttribution"
+		return json.Marshal(t.FeedRecipeRevision_OriginalAttribution)
+	}
+	if t.FeedRecipeRevision_PersonAttribution != nil {
+		t.FeedRecipeRevision_PersonAttribution.LexiconTypeID = "app.foodios.feed.recipeRevision#personAttribution"
+		return json.Marshal(t.FeedRecipeRevision_PersonAttribution)
+	}
+	if t.FeedRecipeRevision_PublicationAttribution != nil {
+		t.FeedRecipeRevision_PublicationAttribution.LexiconTypeID = "app.foodios.feed.recipeRevision#publicationAttribution"
+		return json.Marshal(t.FeedRecipeRevision_PublicationAttribution)
+	}
+	if t.FeedRecipeRevision_WebsiteAttribution != nil {
+		t.FeedRecipeRevision_WebsiteAttribution.LexiconTypeID = "app.foodios.feed.recipeRevision#websiteAttribution"
+		return json.Marshal(t.FeedRecipeRevision_WebsiteAttribution)
+	}
+	if t.FeedRecipeRevision_ShowAttribution != nil {
+		t.FeedRecipeRevision_ShowAttribution.LexiconTypeID = "app.foodios.feed.recipeRevision#showAttribution"
+		return json.Marshal(t.FeedRecipeRevision_ShowAttribution)
+	}
+	if t.FeedRecipeRevision_ProductAttribution != nil {
+		t.FeedRecipeRevision_ProductAttribution.LexiconTypeID = "app.foodios.feed.recipeRevision#productAttribution"
+		return json.Marshal(t.FeedRecipeRevision_ProductAttribution)
+	}
+	return nil, fmt.Errorf("cannot marshal empty enum")
+}
+func (t *FeedRecipeRevision_Attribution) UnmarshalJSON(b []byte) error {
+	typ, err := util.TypeExtract(b)
+	if err != nil {
+		return err
+	}
+
+	switch typ {
+	case "app.foodios.feed.recipeRevision#originalAttribution":
+		t.FeedRecipeRevision_OriginalAttribution = new(FeedRecipeRevision_OriginalAttribution)
+		return json.Unmarshal(b, t.FeedRecipeRevision_OriginalAttribution)
+	case "app.foodios.feed.recipeRevision#personAttribution":
+		t.FeedRecipeRevision_PersonAttribution = new(FeedRecipeRevision_PersonAttribution)
+		return json.Unmarshal(b, t.FeedRecipeRevision_PersonAttribution)
+	case "app.foodios.feed.recipeRevision#publicationAttribution":
+		t.FeedRecipeRevision_PublicationAttribution = new(FeedRecipeRevision_PublicationAttribution)
+		return json.Unmarshal(b, t.FeedRecipeRevision_PublicationAttribution)
+	case "app.foodios.feed.recipeRevision#websiteAttribution":
+		t.FeedRecipeRevision_WebsiteAttribution = new(FeedRecipeRevision_WebsiteAttribution)
+		return json.Unmarshal(b, t.FeedRecipeRevision_WebsiteAttribution)
+	case "app.foodios.feed.recipeRevision#showAttribution":
+		t.FeedRecipeRevision_ShowAttribution = new(FeedRecipeRevision_ShowAttribution)
+		return json.Unmarshal(b, t.FeedRecipeRevision_ShowAttribution)
+	case "app.foodios.feed.recipeRevision#productAttribution":
+		t.FeedRecipeRevision_ProductAttribution = new(FeedRecipeRevision_ProductAttribution)
+		return json.Unmarshal(b, t.FeedRecipeRevision_ProductAttribution)
+
+	default:
+		return fmt.Errorf("closed enums must have a matching value")
+	}
+}
+
+func (t *FeedRecipeRevision_Attribution) MarshalCBOR(w io.Writer) error {
+
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if t.FeedRecipeRevision_OriginalAttribution != nil {
+		return t.FeedRecipeRevision_OriginalAttribution.MarshalCBOR(w)
+	}
+	if t.FeedRecipeRevision_PersonAttribution != nil {
+		return t.FeedRecipeRevision_PersonAttribution.MarshalCBOR(w)
+	}
+	if t.FeedRecipeRevision_PublicationAttribution != nil {
+		return t.FeedRecipeRevision_PublicationAttribution.MarshalCBOR(w)
+	}
+	if t.FeedRecipeRevision_WebsiteAttribution != nil {
+		return t.FeedRecipeRevision_WebsiteAttribution.MarshalCBOR(w)
+	}
+	if t.FeedRecipeRevision_ShowAttribution != nil {
+		return t.FeedRecipeRevision_ShowAttribution.MarshalCBOR(w)
+	}
+	if t.FeedRecipeRevision_ProductAttribution != nil {
+		return t.FeedRecipeRevision_ProductAttribution.MarshalCBOR(w)
+	}
+	return fmt.Errorf("cannot cbor marshal empty enum")
+}
+func (t *FeedRecipeRevision_Attribution) UnmarshalCBOR(r io.Reader) error {
+	typ, b, err := util.CborTypeExtractReader(r)
+	if err != nil {
+		return err
+	}
+
+	switch typ {
+	case "app.foodios.feed.recipeRevision#originalAttribution":
+		t.FeedRecipeRevision_OriginalAttribution = new(FeedRecipeRevision_OriginalAttribution)
+		return t.FeedRecipeRevision_OriginalAttribution.UnmarshalCBOR(bytes.NewReader(b))
+	case "app.foodios.feed.recipeRevision#personAttribution":
+		t.FeedRecipeRevision_PersonAttribution = new(FeedRecipeRevision_PersonAttribution)
+		return t.FeedRecipeRevision_PersonAttribution.UnmarshalCBOR(bytes.NewReader(b))
+	case "app.foodios.feed.recipeRevision#publicationAttribution":
+		t.FeedRecipeRevision_PublicationAttribution = new(FeedRecipeRevision_PublicationAttribution)
+		return t.FeedRecipeRevision_PublicationAttribution.UnmarshalCBOR(bytes.NewReader(b))
+	case "app.foodios.feed.recipeRevision#websiteAttribution":
+		t.FeedRecipeRevision_WebsiteAttribution = new(FeedRecipeRevision_WebsiteAttribution)
+		return t.FeedRecipeRevision_WebsiteAttribution.UnmarshalCBOR(bytes.NewReader(b))
+	case "app.foodios.feed.recipeRevision#showAttribution":
+		t.FeedRecipeRevision_ShowAttribution = new(FeedRecipeRevision_ShowAttribution)
+		return t.FeedRecipeRevision_ShowAttribution.UnmarshalCBOR(bytes.NewReader(b))
+	case "app.foodios.feed.recipeRevision#productAttribution":
+		t.FeedRecipeRevision_ProductAttribution = new(FeedRecipeRevision_ProductAttribution)
+		return t.FeedRecipeRevision_ProductAttribution.UnmarshalCBOR(bytes.NewReader(b))
+
+	default:
+		return fmt.Errorf("closed enums must have a matching value")
+	}
 }
 
 type FeedRecipeRevision_Embed struct {
@@ -150,77 +289,7 @@ func (t *FeedRecipeRevision_Embed) UnmarshalCBOR(r io.Reader) error {
 	}
 }
 
-type FeedRecipeRevision_Images struct {
-	EmbedImages *appbskytypes.EmbedImages
-	EmbedVideo  *appbskytypes.EmbedVideo
-}
-
-func (t *FeedRecipeRevision_Images) MarshalJSON() ([]byte, error) {
-	if t.EmbedImages != nil {
-		t.EmbedImages.LexiconTypeID = "app.bsky.embed.images"
-		return json.Marshal(t.EmbedImages)
-	}
-	if t.EmbedVideo != nil {
-		t.EmbedVideo.LexiconTypeID = "app.bsky.embed.video"
-		return json.Marshal(t.EmbedVideo)
-	}
-	return nil, fmt.Errorf("cannot marshal empty enum")
-}
-func (t *FeedRecipeRevision_Images) UnmarshalJSON(b []byte) error {
-	typ, err := util.TypeExtract(b)
-	if err != nil {
-		return err
-	}
-
-	switch typ {
-	case "app.bsky.embed.images":
-		t.EmbedImages = new(appbskytypes.EmbedImages)
-		return json.Unmarshal(b, t.EmbedImages)
-	case "app.bsky.embed.video":
-		t.EmbedVideo = new(appbskytypes.EmbedVideo)
-		return json.Unmarshal(b, t.EmbedVideo)
-
-	default:
-		return nil
-	}
-}
-
-func (t *FeedRecipeRevision_Images) MarshalCBOR(w io.Writer) error {
-
-	if t == nil {
-		_, err := w.Write(cbg.CborNull)
-		return err
-	}
-	if t.EmbedImages != nil {
-		return t.EmbedImages.MarshalCBOR(w)
-	}
-	if t.EmbedVideo != nil {
-		return t.EmbedVideo.MarshalCBOR(w)
-	}
-	return fmt.Errorf("cannot cbor marshal empty enum")
-}
-func (t *FeedRecipeRevision_Images) UnmarshalCBOR(r io.Reader) error {
-	typ, b, err := util.CborTypeExtractReader(r)
-	if err != nil {
-		return err
-	}
-
-	switch typ {
-	case "app.bsky.embed.images":
-		t.EmbedImages = new(appbskytypes.EmbedImages)
-		return t.EmbedImages.UnmarshalCBOR(bytes.NewReader(b))
-	case "app.bsky.embed.video":
-		t.EmbedVideo = new(appbskytypes.EmbedVideo)
-		return t.EmbedVideo.UnmarshalCBOR(bytes.NewReader(b))
-
-	default:
-		return nil
-	}
-}
-
 // FeedRecipeRevision_Ingredient is a "ingredient" in the app.foodios.feed.recipeRevision schema.
-//
-// TODO add description/alternatives properties?
 type FeedRecipeRevision_Ingredient struct {
 	Images   *FeedRecipeRevision_Ingredient_Images `json:"images,omitempty" cborgen:"images,omitempty"`
 	Name     string                                `json:"name" cborgen:"name"`
@@ -296,6 +365,155 @@ func (t *FeedRecipeRevision_Ingredient_Images) UnmarshalCBOR(r io.Reader) error 
 	}
 }
 
+// FeedRecipeRevision_Instruction is a "instruction" in the app.foodios.feed.recipeRevision schema.
+type FeedRecipeRevision_Instruction struct {
+	Images *FeedRecipeRevision_Instruction_Images `json:"images,omitempty" cborgen:"images,omitempty"`
+	Text   string                                 `json:"text" cborgen:"text"`
+}
+
+// FeedRecipeRevision_InstructionSection is a "instructionSection" in the app.foodios.feed.recipeRevision schema.
+type FeedRecipeRevision_InstructionSection struct {
+	Images       *FeedRecipeRevision_InstructionSection_Images `json:"images,omitempty" cborgen:"images,omitempty"`
+	Instructions []*FeedRecipeRevision_Instruction             `json:"instructions" cborgen:"instructions"`
+	Name         *string                                       `json:"name,omitempty" cborgen:"name,omitempty"`
+}
+
+type FeedRecipeRevision_InstructionSection_Images struct {
+	EmbedImages *appbskytypes.EmbedImages
+	EmbedVideo  *appbskytypes.EmbedVideo
+}
+
+func (t *FeedRecipeRevision_InstructionSection_Images) MarshalJSON() ([]byte, error) {
+	if t.EmbedImages != nil {
+		t.EmbedImages.LexiconTypeID = "app.bsky.embed.images"
+		return json.Marshal(t.EmbedImages)
+	}
+	if t.EmbedVideo != nil {
+		t.EmbedVideo.LexiconTypeID = "app.bsky.embed.video"
+		return json.Marshal(t.EmbedVideo)
+	}
+	return nil, fmt.Errorf("cannot marshal empty enum")
+}
+func (t *FeedRecipeRevision_InstructionSection_Images) UnmarshalJSON(b []byte) error {
+	typ, err := util.TypeExtract(b)
+	if err != nil {
+		return err
+	}
+
+	switch typ {
+	case "app.bsky.embed.images":
+		t.EmbedImages = new(appbskytypes.EmbedImages)
+		return json.Unmarshal(b, t.EmbedImages)
+	case "app.bsky.embed.video":
+		t.EmbedVideo = new(appbskytypes.EmbedVideo)
+		return json.Unmarshal(b, t.EmbedVideo)
+
+	default:
+		return nil
+	}
+}
+
+func (t *FeedRecipeRevision_InstructionSection_Images) MarshalCBOR(w io.Writer) error {
+
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if t.EmbedImages != nil {
+		return t.EmbedImages.MarshalCBOR(w)
+	}
+	if t.EmbedVideo != nil {
+		return t.EmbedVideo.MarshalCBOR(w)
+	}
+	return fmt.Errorf("cannot cbor marshal empty enum")
+}
+func (t *FeedRecipeRevision_InstructionSection_Images) UnmarshalCBOR(r io.Reader) error {
+	typ, b, err := util.CborTypeExtractReader(r)
+	if err != nil {
+		return err
+	}
+
+	switch typ {
+	case "app.bsky.embed.images":
+		t.EmbedImages = new(appbskytypes.EmbedImages)
+		return t.EmbedImages.UnmarshalCBOR(bytes.NewReader(b))
+	case "app.bsky.embed.video":
+		t.EmbedVideo = new(appbskytypes.EmbedVideo)
+		return t.EmbedVideo.UnmarshalCBOR(bytes.NewReader(b))
+
+	default:
+		return nil
+	}
+}
+
+type FeedRecipeRevision_Instruction_Images struct {
+	EmbedImages *appbskytypes.EmbedImages
+	EmbedVideo  *appbskytypes.EmbedVideo
+}
+
+func (t *FeedRecipeRevision_Instruction_Images) MarshalJSON() ([]byte, error) {
+	if t.EmbedImages != nil {
+		t.EmbedImages.LexiconTypeID = "app.bsky.embed.images"
+		return json.Marshal(t.EmbedImages)
+	}
+	if t.EmbedVideo != nil {
+		t.EmbedVideo.LexiconTypeID = "app.bsky.embed.video"
+		return json.Marshal(t.EmbedVideo)
+	}
+	return nil, fmt.Errorf("cannot marshal empty enum")
+}
+func (t *FeedRecipeRevision_Instruction_Images) UnmarshalJSON(b []byte) error {
+	typ, err := util.TypeExtract(b)
+	if err != nil {
+		return err
+	}
+
+	switch typ {
+	case "app.bsky.embed.images":
+		t.EmbedImages = new(appbskytypes.EmbedImages)
+		return json.Unmarshal(b, t.EmbedImages)
+	case "app.bsky.embed.video":
+		t.EmbedVideo = new(appbskytypes.EmbedVideo)
+		return json.Unmarshal(b, t.EmbedVideo)
+
+	default:
+		return nil
+	}
+}
+
+func (t *FeedRecipeRevision_Instruction_Images) MarshalCBOR(w io.Writer) error {
+
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if t.EmbedImages != nil {
+		return t.EmbedImages.MarshalCBOR(w)
+	}
+	if t.EmbedVideo != nil {
+		return t.EmbedVideo.MarshalCBOR(w)
+	}
+	return fmt.Errorf("cannot cbor marshal empty enum")
+}
+func (t *FeedRecipeRevision_Instruction_Images) UnmarshalCBOR(r io.Reader) error {
+	typ, b, err := util.CborTypeExtractReader(r)
+	if err != nil {
+		return err
+	}
+
+	switch typ {
+	case "app.bsky.embed.images":
+		t.EmbedImages = new(appbskytypes.EmbedImages)
+		return t.EmbedImages.UnmarshalCBOR(bytes.NewReader(b))
+	case "app.bsky.embed.video":
+		t.EmbedVideo = new(appbskytypes.EmbedVideo)
+		return t.EmbedVideo.UnmarshalCBOR(bytes.NewReader(b))
+
+	default:
+		return nil
+	}
+}
+
 // Self-label values for this post. Effectively content warnings.
 type FeedRecipeRevision_Labels struct {
 	LabelDefs_SelfLabels *comatprototypes.LabelDefs_SelfLabels
@@ -351,76 +569,303 @@ func (t *FeedRecipeRevision_Labels) UnmarshalCBOR(r io.Reader) error {
 	}
 }
 
-// FeedRecipeRevision_Step is a "step" in the app.foodios.feed.recipeRevision schema.
-type FeedRecipeRevision_Step struct {
-	Images *FeedRecipeRevision_Step_Images `json:"images,omitempty" cborgen:"images,omitempty"`
-	Text   string                          `json:"text" cborgen:"text"`
+// FeedRecipeRevision_Nutrition is a "nutrition" in the app.foodios.feed.recipeRevision schema.
+type FeedRecipeRevision_Nutrition struct {
+	// carbohydrateContent: Energy in kJ
+	CarbohydrateContent *string `json:"carbohydrateContent,omitempty" cborgen:"carbohydrateContent,omitempty"`
+	// cholesterolContent: Cholesterol in mg
+	CholesterolContent *string `json:"cholesterolContent,omitempty" cborgen:"cholesterolContent,omitempty"`
+	// energy: Energy in kJ
+	Energy string `json:"energy" cborgen:"energy"`
+	// fatContent: Fat per serving in g
+	FatContent *string `json:"fatContent,omitempty" cborgen:"fatContent,omitempty"`
+	// fiberContent: Fat per serving in g
+	FiberContent *string `json:"fiberContent,omitempty" cborgen:"fiberContent,omitempty"`
+	// proteinContent: Protein per serving in g
+	ProteinContent *string `json:"proteinContent,omitempty" cborgen:"proteinContent,omitempty"`
+	// saturatedFatContent: Saturated per serving fat in g
+	SaturatedFatContent *string `json:"saturatedFatContent,omitempty" cborgen:"saturatedFatContent,omitempty"`
+	// servingSize: The serving size, in terms of the number of volume or mass.
+	ServingSize *FeedRecipeRevision_QuantityAndUnit `json:"servingSize" cborgen:"servingSize"`
+	// sodiumContent: Sodium in mg
+	SodiumContent *string `json:"sodiumContent,omitempty" cborgen:"sodiumContent,omitempty"`
+	// sugarContent: Sugar in g
+	SugarContent *string `json:"sugarContent,omitempty" cborgen:"sugarContent,omitempty"`
+	// transFatContent: Trans fat in g
+	TransFatContent *string `json:"transFatContent,omitempty" cborgen:"transFatContent,omitempty"`
+	// unsaturatedFatContent: Unsaturated fat in g
+	UnsaturatedFatContent *string `json:"unsaturatedFatContent,omitempty" cborgen:"unsaturatedFatContent,omitempty"`
 }
 
-type FeedRecipeRevision_Step_Images struct {
-	EmbedImages *appbskytypes.EmbedImages
-	EmbedVideo  *appbskytypes.EmbedVideo
+// FeedRecipeRevision_OriginalAttribution is a "originalAttribution" in the app.foodios.feed.recipeRevision schema.
+//
+// RECORDTYPE: FeedRecipeRevision_OriginalAttribution
+type FeedRecipeRevision_OriginalAttribution struct {
+	LexiconTypeID string                                          `json:"$type,const=app.foodios.feed.recipeRevision#originalAttribution" cborgen:"$type,const=app.foodios.feed.recipeRevision#originalAttribution"`
+	License       *FeedRecipeRevision_OriginalAttribution_License `json:"license" cborgen:"license"`
+	Type          string                                          `json:"type" cborgen:"type"`
+	Url           *string                                         `json:"url,omitempty" cborgen:"url,omitempty"`
 }
 
-func (t *FeedRecipeRevision_Step_Images) MarshalJSON() ([]byte, error) {
-	if t.EmbedImages != nil {
-		t.EmbedImages.LexiconTypeID = "app.bsky.embed.images"
-		return json.Marshal(t.EmbedImages)
+type FeedRecipeRevision_OriginalAttribution_License struct {
+	FeedDefs_LicenseAllRights             *FeedDefs_LicenseAllRights
+	FeedDefs_LicenseCreativeCommonsBy     *FeedDefs_LicenseCreativeCommonsBy
+	FeedDefs_LicenseCreativeCommonsBySa   *FeedDefs_LicenseCreativeCommonsBySa
+	FeedDefs_LicenseCreativeCommonsByNc   *FeedDefs_LicenseCreativeCommonsByNc
+	FeedDefs_LicenseCreativeCommonsByNcSa *FeedDefs_LicenseCreativeCommonsByNcSa
+	FeedDefs_LicensePublicDomain          *FeedDefs_LicensePublicDomain
+}
+
+func (t *FeedRecipeRevision_OriginalAttribution_License) MarshalJSON() ([]byte, error) {
+	if t.FeedDefs_LicenseAllRights != nil {
+		t.FeedDefs_LicenseAllRights.LexiconTypeID = "app.foodios.feed.defs#licenseAllRights"
+		return json.Marshal(t.FeedDefs_LicenseAllRights)
 	}
-	if t.EmbedVideo != nil {
-		t.EmbedVideo.LexiconTypeID = "app.bsky.embed.video"
-		return json.Marshal(t.EmbedVideo)
+	if t.FeedDefs_LicenseCreativeCommonsBy != nil {
+		t.FeedDefs_LicenseCreativeCommonsBy.LexiconTypeID = "app.foodios.feed.defs#licenseCreativeCommonsBy"
+		return json.Marshal(t.FeedDefs_LicenseCreativeCommonsBy)
+	}
+	if t.FeedDefs_LicenseCreativeCommonsBySa != nil {
+		t.FeedDefs_LicenseCreativeCommonsBySa.LexiconTypeID = "app.foodios.feed.defs#licenseCreativeCommonsBySa"
+		return json.Marshal(t.FeedDefs_LicenseCreativeCommonsBySa)
+	}
+	if t.FeedDefs_LicenseCreativeCommonsByNc != nil {
+		t.FeedDefs_LicenseCreativeCommonsByNc.LexiconTypeID = "app.foodios.feed.defs#licenseCreativeCommonsByNc"
+		return json.Marshal(t.FeedDefs_LicenseCreativeCommonsByNc)
+	}
+	if t.FeedDefs_LicenseCreativeCommonsByNcSa != nil {
+		t.FeedDefs_LicenseCreativeCommonsByNcSa.LexiconTypeID = "app.foodios.feed.defs#licenseCreativeCommonsByNcSa"
+		return json.Marshal(t.FeedDefs_LicenseCreativeCommonsByNcSa)
+	}
+	if t.FeedDefs_LicensePublicDomain != nil {
+		t.FeedDefs_LicensePublicDomain.LexiconTypeID = "app.foodios.feed.defs#licensePublicDomain"
+		return json.Marshal(t.FeedDefs_LicensePublicDomain)
 	}
 	return nil, fmt.Errorf("cannot marshal empty enum")
 }
-func (t *FeedRecipeRevision_Step_Images) UnmarshalJSON(b []byte) error {
+func (t *FeedRecipeRevision_OriginalAttribution_License) UnmarshalJSON(b []byte) error {
 	typ, err := util.TypeExtract(b)
 	if err != nil {
 		return err
 	}
 
 	switch typ {
-	case "app.bsky.embed.images":
-		t.EmbedImages = new(appbskytypes.EmbedImages)
-		return json.Unmarshal(b, t.EmbedImages)
-	case "app.bsky.embed.video":
-		t.EmbedVideo = new(appbskytypes.EmbedVideo)
-		return json.Unmarshal(b, t.EmbedVideo)
+	case "app.foodios.feed.defs#licenseAllRights":
+		t.FeedDefs_LicenseAllRights = new(FeedDefs_LicenseAllRights)
+		return json.Unmarshal(b, t.FeedDefs_LicenseAllRights)
+	case "app.foodios.feed.defs#licenseCreativeCommonsBy":
+		t.FeedDefs_LicenseCreativeCommonsBy = new(FeedDefs_LicenseCreativeCommonsBy)
+		return json.Unmarshal(b, t.FeedDefs_LicenseCreativeCommonsBy)
+	case "app.foodios.feed.defs#licenseCreativeCommonsBySa":
+		t.FeedDefs_LicenseCreativeCommonsBySa = new(FeedDefs_LicenseCreativeCommonsBySa)
+		return json.Unmarshal(b, t.FeedDefs_LicenseCreativeCommonsBySa)
+	case "app.foodios.feed.defs#licenseCreativeCommonsByNc":
+		t.FeedDefs_LicenseCreativeCommonsByNc = new(FeedDefs_LicenseCreativeCommonsByNc)
+		return json.Unmarshal(b, t.FeedDefs_LicenseCreativeCommonsByNc)
+	case "app.foodios.feed.defs#licenseCreativeCommonsByNcSa":
+		t.FeedDefs_LicenseCreativeCommonsByNcSa = new(FeedDefs_LicenseCreativeCommonsByNcSa)
+		return json.Unmarshal(b, t.FeedDefs_LicenseCreativeCommonsByNcSa)
+	case "app.foodios.feed.defs#licensePublicDomain":
+		t.FeedDefs_LicensePublicDomain = new(FeedDefs_LicensePublicDomain)
+		return json.Unmarshal(b, t.FeedDefs_LicensePublicDomain)
 
 	default:
 		return nil
 	}
 }
 
-func (t *FeedRecipeRevision_Step_Images) MarshalCBOR(w io.Writer) error {
+func (t *FeedRecipeRevision_OriginalAttribution_License) MarshalCBOR(w io.Writer) error {
 
 	if t == nil {
 		_, err := w.Write(cbg.CborNull)
 		return err
 	}
-	if t.EmbedImages != nil {
-		return t.EmbedImages.MarshalCBOR(w)
+	if t.FeedDefs_LicenseAllRights != nil {
+		return t.FeedDefs_LicenseAllRights.MarshalCBOR(w)
 	}
-	if t.EmbedVideo != nil {
-		return t.EmbedVideo.MarshalCBOR(w)
+	if t.FeedDefs_LicenseCreativeCommonsBy != nil {
+		return t.FeedDefs_LicenseCreativeCommonsBy.MarshalCBOR(w)
+	}
+	if t.FeedDefs_LicenseCreativeCommonsBySa != nil {
+		return t.FeedDefs_LicenseCreativeCommonsBySa.MarshalCBOR(w)
+	}
+	if t.FeedDefs_LicenseCreativeCommonsByNc != nil {
+		return t.FeedDefs_LicenseCreativeCommonsByNc.MarshalCBOR(w)
+	}
+	if t.FeedDefs_LicenseCreativeCommonsByNcSa != nil {
+		return t.FeedDefs_LicenseCreativeCommonsByNcSa.MarshalCBOR(w)
+	}
+	if t.FeedDefs_LicensePublicDomain != nil {
+		return t.FeedDefs_LicensePublicDomain.MarshalCBOR(w)
 	}
 	return fmt.Errorf("cannot cbor marshal empty enum")
 }
-func (t *FeedRecipeRevision_Step_Images) UnmarshalCBOR(r io.Reader) error {
+func (t *FeedRecipeRevision_OriginalAttribution_License) UnmarshalCBOR(r io.Reader) error {
 	typ, b, err := util.CborTypeExtractReader(r)
 	if err != nil {
 		return err
 	}
 
 	switch typ {
-	case "app.bsky.embed.images":
-		t.EmbedImages = new(appbskytypes.EmbedImages)
-		return t.EmbedImages.UnmarshalCBOR(bytes.NewReader(b))
-	case "app.bsky.embed.video":
-		t.EmbedVideo = new(appbskytypes.EmbedVideo)
-		return t.EmbedVideo.UnmarshalCBOR(bytes.NewReader(b))
+	case "app.foodios.feed.defs#licenseAllRights":
+		t.FeedDefs_LicenseAllRights = new(FeedDefs_LicenseAllRights)
+		return t.FeedDefs_LicenseAllRights.UnmarshalCBOR(bytes.NewReader(b))
+	case "app.foodios.feed.defs#licenseCreativeCommonsBy":
+		t.FeedDefs_LicenseCreativeCommonsBy = new(FeedDefs_LicenseCreativeCommonsBy)
+		return t.FeedDefs_LicenseCreativeCommonsBy.UnmarshalCBOR(bytes.NewReader(b))
+	case "app.foodios.feed.defs#licenseCreativeCommonsBySa":
+		t.FeedDefs_LicenseCreativeCommonsBySa = new(FeedDefs_LicenseCreativeCommonsBySa)
+		return t.FeedDefs_LicenseCreativeCommonsBySa.UnmarshalCBOR(bytes.NewReader(b))
+	case "app.foodios.feed.defs#licenseCreativeCommonsByNc":
+		t.FeedDefs_LicenseCreativeCommonsByNc = new(FeedDefs_LicenseCreativeCommonsByNc)
+		return t.FeedDefs_LicenseCreativeCommonsByNc.UnmarshalCBOR(bytes.NewReader(b))
+	case "app.foodios.feed.defs#licenseCreativeCommonsByNcSa":
+		t.FeedDefs_LicenseCreativeCommonsByNcSa = new(FeedDefs_LicenseCreativeCommonsByNcSa)
+		return t.FeedDefs_LicenseCreativeCommonsByNcSa.UnmarshalCBOR(bytes.NewReader(b))
+	case "app.foodios.feed.defs#licensePublicDomain":
+		t.FeedDefs_LicensePublicDomain = new(FeedDefs_LicensePublicDomain)
+		return t.FeedDefs_LicensePublicDomain.UnmarshalCBOR(bytes.NewReader(b))
 
 	default:
 		return nil
 	}
+}
+
+// FeedRecipeRevision_PersonAttribution is a "personAttribution" in the app.foodios.feed.recipeRevision schema.
+//
+// RECORDTYPE: FeedRecipeRevision_PersonAttribution
+type FeedRecipeRevision_PersonAttribution struct {
+	LexiconTypeID string  `json:"$type,const=app.foodios.feed.recipeRevision#personAttribution" cborgen:"$type,const=app.foodios.feed.recipeRevision#personAttribution"`
+	Name          string  `json:"name" cborgen:"name"`
+	Notes         *string `json:"notes,omitempty" cborgen:"notes,omitempty"`
+	Type          string  `json:"type" cborgen:"type"`
+	Url           *string `json:"url,omitempty" cborgen:"url,omitempty"`
+}
+
+// FeedRecipeRevision_ProductAttribution is a "productAttribution" in the app.foodios.feed.recipeRevision schema.
+//
+// RECORDTYPE: FeedRecipeRevision_ProductAttribution
+type FeedRecipeRevision_ProductAttribution struct {
+	LexiconTypeID string  `json:"$type,const=app.foodios.feed.recipeRevision#productAttribution" cborgen:"$type,const=app.foodios.feed.recipeRevision#productAttribution"`
+	Brand         string  `json:"brand" cborgen:"brand"`
+	Name          string  `json:"name" cborgen:"name"`
+	Notes         *string `json:"notes,omitempty" cborgen:"notes,omitempty"`
+	Type          string  `json:"type" cborgen:"type"`
+	Upc           *string `json:"upc,omitempty" cborgen:"upc,omitempty"`
+	Url           *string `json:"url,omitempty" cborgen:"url,omitempty"`
+}
+
+// FeedRecipeRevision_PublicationAttribution is a "publicationAttribution" in the app.foodios.feed.recipeRevision schema.
+//
+// RECORDTYPE: FeedRecipeRevision_PublicationAttribution
+type FeedRecipeRevision_PublicationAttribution struct {
+	LexiconTypeID   string                                                     `json:"$type,const=app.foodios.feed.recipeRevision#publicationAttribution" cborgen:"$type,const=app.foodios.feed.recipeRevision#publicationAttribution"`
+	Author          string                                                     `json:"author" cborgen:"author"`
+	Isbn            *string                                                    `json:"isbn,omitempty" cborgen:"isbn,omitempty"`
+	Notes           *string                                                    `json:"notes,omitempty" cborgen:"notes,omitempty"`
+	Page            *int64                                                     `json:"page,omitempty" cborgen:"page,omitempty"`
+	PublicationType *FeedRecipeRevision_PublicationAttribution_PublicationType `json:"publicationType" cborgen:"publicationType"`
+	Publisher       *string                                                    `json:"publisher,omitempty" cborgen:"publisher,omitempty"`
+	Title           string                                                     `json:"title" cborgen:"title"`
+	Type            string                                                     `json:"type" cborgen:"type"`
+	Url             *string                                                    `json:"url,omitempty" cborgen:"url,omitempty"`
+}
+
+type FeedRecipeRevision_PublicationAttribution_PublicationType struct {
+	FeedDefs_PublicationTypeBook     *FeedDefs_PublicationTypeBook
+	FeedDefs_PublicationTypeMagazine *FeedDefs_PublicationTypeMagazine
+}
+
+func (t *FeedRecipeRevision_PublicationAttribution_PublicationType) MarshalJSON() ([]byte, error) {
+	if t.FeedDefs_PublicationTypeBook != nil {
+		t.FeedDefs_PublicationTypeBook.LexiconTypeID = "app.foodios.feed.defs#publicationTypeBook"
+		return json.Marshal(t.FeedDefs_PublicationTypeBook)
+	}
+	if t.FeedDefs_PublicationTypeMagazine != nil {
+		t.FeedDefs_PublicationTypeMagazine.LexiconTypeID = "app.foodios.feed.defs#publicationTypeMagazine"
+		return json.Marshal(t.FeedDefs_PublicationTypeMagazine)
+	}
+	return nil, fmt.Errorf("cannot marshal empty enum")
+}
+func (t *FeedRecipeRevision_PublicationAttribution_PublicationType) UnmarshalJSON(b []byte) error {
+	typ, err := util.TypeExtract(b)
+	if err != nil {
+		return err
+	}
+
+	switch typ {
+	case "app.foodios.feed.defs#publicationTypeBook":
+		t.FeedDefs_PublicationTypeBook = new(FeedDefs_PublicationTypeBook)
+		return json.Unmarshal(b, t.FeedDefs_PublicationTypeBook)
+	case "app.foodios.feed.defs#publicationTypeMagazine":
+		t.FeedDefs_PublicationTypeMagazine = new(FeedDefs_PublicationTypeMagazine)
+		return json.Unmarshal(b, t.FeedDefs_PublicationTypeMagazine)
+
+	default:
+		return nil
+	}
+}
+
+func (t *FeedRecipeRevision_PublicationAttribution_PublicationType) MarshalCBOR(w io.Writer) error {
+
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if t.FeedDefs_PublicationTypeBook != nil {
+		return t.FeedDefs_PublicationTypeBook.MarshalCBOR(w)
+	}
+	if t.FeedDefs_PublicationTypeMagazine != nil {
+		return t.FeedDefs_PublicationTypeMagazine.MarshalCBOR(w)
+	}
+	return fmt.Errorf("cannot cbor marshal empty enum")
+}
+func (t *FeedRecipeRevision_PublicationAttribution_PublicationType) UnmarshalCBOR(r io.Reader) error {
+	typ, b, err := util.CborTypeExtractReader(r)
+	if err != nil {
+		return err
+	}
+
+	switch typ {
+	case "app.foodios.feed.defs#publicationTypeBook":
+		t.FeedDefs_PublicationTypeBook = new(FeedDefs_PublicationTypeBook)
+		return t.FeedDefs_PublicationTypeBook.UnmarshalCBOR(bytes.NewReader(b))
+	case "app.foodios.feed.defs#publicationTypeMagazine":
+		t.FeedDefs_PublicationTypeMagazine = new(FeedDefs_PublicationTypeMagazine)
+		return t.FeedDefs_PublicationTypeMagazine.UnmarshalCBOR(bytes.NewReader(b))
+
+	default:
+		return nil
+	}
+}
+
+// FeedRecipeRevision_QuantityAndUnit is a "quantityAndUnit" in the app.foodios.feed.recipeRevision schema.
+type FeedRecipeRevision_QuantityAndUnit struct {
+	Quantity string `json:"quantity" cborgen:"quantity"`
+	Unit     string `json:"unit" cborgen:"unit"`
+}
+
+// FeedRecipeRevision_ShowAttribution is a "showAttribution" in the app.foodios.feed.recipeRevision schema.
+//
+// RECORDTYPE: FeedRecipeRevision_ShowAttribution
+type FeedRecipeRevision_ShowAttribution struct {
+	LexiconTypeID string  `json:"$type,const=app.foodios.feed.recipeRevision#showAttribution" cborgen:"$type,const=app.foodios.feed.recipeRevision#showAttribution"`
+	AirDate       *string `json:"airDate,omitempty" cborgen:"airDate,omitempty"`
+	Episode       *string `json:"episode,omitempty" cborgen:"episode,omitempty"`
+	Network       string  `json:"network" cborgen:"network"`
+	Notes         *string `json:"notes,omitempty" cborgen:"notes,omitempty"`
+	Title         string  `json:"title" cborgen:"title"`
+	Type          string  `json:"type" cborgen:"type"`
+	Url           *string `json:"url,omitempty" cborgen:"url,omitempty"`
+}
+
+// FeedRecipeRevision_WebsiteAttribution is a "websiteAttribution" in the app.foodios.feed.recipeRevision schema.
+//
+// RECORDTYPE: FeedRecipeRevision_WebsiteAttribution
+type FeedRecipeRevision_WebsiteAttribution struct {
+	LexiconTypeID string  `json:"$type,const=app.foodios.feed.recipeRevision#websiteAttribution" cborgen:"$type,const=app.foodios.feed.recipeRevision#websiteAttribution"`
+	Name          string  `json:"name" cborgen:"name"`
+	Notes         *string `json:"notes,omitempty" cborgen:"notes,omitempty"`
+	Type          string  `json:"type" cborgen:"type"`
+	Url           string  `json:"url" cborgen:"url"`
 }

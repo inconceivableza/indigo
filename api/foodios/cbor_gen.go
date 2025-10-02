@@ -9,6 +9,7 @@ import (
 	"sort"
 
 	atproto "github.com/bluesky-social/indigo/api/atproto"
+	bsky "github.com/bluesky-social/indigo/api/bsky"
 	cid "github.com/ipfs/go-cid"
 	cbg "github.com/whyrusleeping/cbor-gen"
 	xerrors "golang.org/x/xerrors"
@@ -156,13 +157,21 @@ func (t *FeedRecipeRevision) MarshalCBOR(w io.Writer) error {
 	}
 
 	cw := cbg.NewCborWriter(w)
-	fieldCount := 13
+	fieldCount := 21
+
+	if t.Attribution == nil {
+		fieldCount--
+	}
+
+	if t.CookingTime == nil {
+		fieldCount--
+	}
 
 	if t.Embed == nil {
 		fieldCount--
 	}
 
-	if t.Images == nil {
+	if t.Facets == nil {
 		fieldCount--
 	}
 
@@ -174,7 +183,31 @@ func (t *FeedRecipeRevision) MarshalCBOR(w io.Writer) error {
 		fieldCount--
 	}
 
+	if t.Nutrition == nil {
+		fieldCount--
+	}
+
 	if t.ParentRevisionRef == nil {
+		fieldCount--
+	}
+
+	if t.PrepTime == nil {
+		fieldCount--
+	}
+
+	if t.RecipeCategory == nil {
+		fieldCount--
+	}
+
+	if t.RecipeCuisine == nil {
+		fieldCount--
+	}
+
+	if t.RecipeYield == nil {
+		fieldCount--
+	}
+
+	if t.SuitableForDiet == nil {
 		fieldCount--
 	}
 
@@ -183,6 +216,29 @@ func (t *FeedRecipeRevision) MarshalCBOR(w io.Writer) error {
 	}
 
 	if _, err := cw.Write(cbg.CborEncodeMajorType(cbg.MajMap, uint64(fieldCount))); err != nil {
+		return err
+	}
+
+	// t.Name (string) (string)
+	if len("name") > 1000000 {
+		return xerrors.Errorf("Value in field \"name\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("name"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("name")); err != nil {
+		return err
+	}
+
+	if len(t.Name) > 1000000 {
+		return xerrors.Errorf("Value in field t.Name was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(t.Name))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string(t.Name)); err != nil {
 		return err
 	}
 
@@ -319,71 +375,32 @@ func (t *FeedRecipeRevision) MarshalCBOR(w io.Writer) error {
 		}
 	}
 
-	// t.Steps ([]*foodios.FeedRecipeRevision_Step) (slice)
-	if len("steps") > 1000000 {
-		return xerrors.Errorf("Value in field \"steps\" was too long")
-	}
+	// t.Facets ([]*bsky.RichtextFacet) (slice)
+	if t.Facets != nil {
 
-	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("steps"))); err != nil {
-		return err
-	}
-	if _, err := cw.WriteString(string("steps")); err != nil {
-		return err
-	}
+		if len("facets") > 1000000 {
+			return xerrors.Errorf("Value in field \"facets\" was too long")
+		}
 
-	if len(t.Steps) > 8192 {
-		return xerrors.Errorf("Slice value in field t.Steps was too long")
-	}
-
-	if err := cw.WriteMajorTypeHeader(cbg.MajArray, uint64(len(t.Steps))); err != nil {
-		return err
-	}
-	for _, v := range t.Steps {
-		if err := v.MarshalCBOR(cw); err != nil {
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("facets"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("facets")); err != nil {
 			return err
 		}
 
-	}
-
-	// t.Title (string) (string)
-	if len("title") > 1000000 {
-		return xerrors.Errorf("Value in field \"title\" was too long")
-	}
-
-	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("title"))); err != nil {
-		return err
-	}
-	if _, err := cw.WriteString(string("title")); err != nil {
-		return err
-	}
-
-	if len(t.Title) > 1000000 {
-		return xerrors.Errorf("Value in field t.Title was too long")
-	}
-
-	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(t.Title))); err != nil {
-		return err
-	}
-	if _, err := cw.WriteString(string(t.Title)); err != nil {
-		return err
-	}
-
-	// t.Images (foodios.FeedRecipeRevision_Images) (struct)
-	if t.Images != nil {
-
-		if len("images") > 1000000 {
-			return xerrors.Errorf("Value in field \"images\" was too long")
+		if len(t.Facets) > 8192 {
+			return xerrors.Errorf("Slice value in field t.Facets was too long")
 		}
 
-		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("images"))); err != nil {
+		if err := cw.WriteMajorTypeHeader(cbg.MajArray, uint64(len(t.Facets))); err != nil {
 			return err
 		}
-		if _, err := cw.WriteString(string("images")); err != nil {
-			return err
-		}
+		for _, v := range t.Facets {
+			if err := v.MarshalCBOR(cw); err != nil {
+				return err
+			}
 
-		if err := t.Images.MarshalCBOR(cw); err != nil {
-			return err
 		}
 	}
 
@@ -403,6 +420,38 @@ func (t *FeedRecipeRevision) MarshalCBOR(w io.Writer) error {
 
 		if err := t.Labels.MarshalCBOR(cw); err != nil {
 			return err
+		}
+	}
+
+	// t.PrepTime (string) (string)
+	if t.PrepTime != nil {
+
+		if len("prepTime") > 1000000 {
+			return xerrors.Errorf("Value in field \"prepTime\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("prepTime"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("prepTime")); err != nil {
+			return err
+		}
+
+		if t.PrepTime == nil {
+			if _, err := cw.Write(cbg.CborNull); err != nil {
+				return err
+			}
+		} else {
+			if len(*t.PrepTime) > 1000000 {
+				return xerrors.Errorf("Value in field t.PrepTime was too long")
+			}
+
+			if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(*t.PrepTime))); err != nil {
+				return err
+			}
+			if _, err := cw.WriteString(string(*t.PrepTime)); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -427,6 +476,76 @@ func (t *FeedRecipeRevision) MarshalCBOR(w io.Writer) error {
 	}
 	if _, err := cw.WriteString(string(t.CreatedAt)); err != nil {
 		return err
+	}
+
+	// t.Nutrition (foodios.FeedRecipeRevision_Nutrition) (struct)
+	if t.Nutrition != nil {
+
+		if len("nutrition") > 1000000 {
+			return xerrors.Errorf("Value in field \"nutrition\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("nutrition"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("nutrition")); err != nil {
+			return err
+		}
+
+		if err := t.Nutrition.MarshalCBOR(cw); err != nil {
+			return err
+		}
+	}
+
+	// t.Attribution (foodios.FeedRecipeRevision_Attribution) (struct)
+	if t.Attribution != nil {
+
+		if len("attribution") > 1000000 {
+			return xerrors.Errorf("Value in field \"attribution\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("attribution"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("attribution")); err != nil {
+			return err
+		}
+
+		if err := t.Attribution.MarshalCBOR(cw); err != nil {
+			return err
+		}
+	}
+
+	// t.CookingTime (string) (string)
+	if t.CookingTime != nil {
+
+		if len("cookingTime") > 1000000 {
+			return xerrors.Errorf("Value in field \"cookingTime\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("cookingTime"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("cookingTime")); err != nil {
+			return err
+		}
+
+		if t.CookingTime == nil {
+			if _, err := cw.Write(cbg.CborNull); err != nil {
+				return err
+			}
+		} else {
+			if len(*t.CookingTime) > 1000000 {
+				return xerrors.Errorf("Value in field t.CookingTime was too long")
+			}
+
+			if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(*t.CookingTime))); err != nil {
+				return err
+			}
+			if _, err := cw.WriteString(string(*t.CookingTime)); err != nil {
+				return err
+			}
+		}
 	}
 
 	// t.Ingredients ([]*foodios.FeedRecipeRevision_Ingredient) (slice)
@@ -455,6 +574,87 @@ func (t *FeedRecipeRevision) MarshalCBOR(w io.Writer) error {
 
 	}
 
+	// t.RecipeYield (foodios.FeedRecipeRevision_QuantityAndUnit) (struct)
+	if t.RecipeYield != nil {
+
+		if len("recipeYield") > 1000000 {
+			return xerrors.Errorf("Value in field \"recipeYield\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("recipeYield"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("recipeYield")); err != nil {
+			return err
+		}
+
+		if err := t.RecipeYield.MarshalCBOR(cw); err != nil {
+			return err
+		}
+	}
+
+	// t.Instructions ([]*foodios.FeedRecipeRevision_InstructionSection) (slice)
+	if len("instructions") > 1000000 {
+		return xerrors.Errorf("Value in field \"instructions\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("instructions"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("instructions")); err != nil {
+		return err
+	}
+
+	if len(t.Instructions) > 8192 {
+		return xerrors.Errorf("Slice value in field t.Instructions was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajArray, uint64(len(t.Instructions))); err != nil {
+		return err
+	}
+	for _, v := range t.Instructions {
+		if err := v.MarshalCBOR(cw); err != nil {
+			return err
+		}
+
+	}
+
+	// t.RecipeCuisine ([]string) (slice)
+	if t.RecipeCuisine != nil {
+
+		if len("recipeCuisine") > 1000000 {
+			return xerrors.Errorf("Value in field \"recipeCuisine\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("recipeCuisine"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("recipeCuisine")); err != nil {
+			return err
+		}
+
+		if len(t.RecipeCuisine) > 8192 {
+			return xerrors.Errorf("Slice value in field t.RecipeCuisine was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajArray, uint64(len(t.RecipeCuisine))); err != nil {
+			return err
+		}
+		for _, v := range t.RecipeCuisine {
+			if len(v) > 1000000 {
+				return xerrors.Errorf("Value in field v was too long")
+			}
+
+			if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(v))); err != nil {
+				return err
+			}
+			if _, err := cw.WriteString(string(v)); err != nil {
+				return err
+			}
+
+		}
+	}
+
 	// t.RecipePostRef (atproto.RepoStrongRef) (struct)
 	if len("recipePostRef") > 1000000 {
 		return xerrors.Errorf("Value in field \"recipePostRef\" was too long")
@@ -469,6 +669,78 @@ func (t *FeedRecipeRevision) MarshalCBOR(w io.Writer) error {
 
 	if err := t.RecipePostRef.MarshalCBOR(cw); err != nil {
 		return err
+	}
+
+	// t.RecipeCategory ([]string) (slice)
+	if t.RecipeCategory != nil {
+
+		if len("recipeCategory") > 1000000 {
+			return xerrors.Errorf("Value in field \"recipeCategory\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("recipeCategory"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("recipeCategory")); err != nil {
+			return err
+		}
+
+		if len(t.RecipeCategory) > 8192 {
+			return xerrors.Errorf("Slice value in field t.RecipeCategory was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajArray, uint64(len(t.RecipeCategory))); err != nil {
+			return err
+		}
+		for _, v := range t.RecipeCategory {
+			if len(v) > 1000000 {
+				return xerrors.Errorf("Value in field v was too long")
+			}
+
+			if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(v))); err != nil {
+				return err
+			}
+			if _, err := cw.WriteString(string(v)); err != nil {
+				return err
+			}
+
+		}
+	}
+
+	// t.SuitableForDiet ([]string) (slice)
+	if t.SuitableForDiet != nil {
+
+		if len("suitableForDiet") > 1000000 {
+			return xerrors.Errorf("Value in field \"suitableForDiet\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("suitableForDiet"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("suitableForDiet")); err != nil {
+			return err
+		}
+
+		if len(t.SuitableForDiet) > 8192 {
+			return xerrors.Errorf("Slice value in field t.SuitableForDiet was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajArray, uint64(len(t.SuitableForDiet))); err != nil {
+			return err
+		}
+		for _, v := range t.SuitableForDiet {
+			if len(v) > 1000000 {
+				return xerrors.Errorf("Value in field v was too long")
+			}
+
+			if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(v))); err != nil {
+				return err
+			}
+			if _, err := cw.WriteString(string(v)); err != nil {
+				return err
+			}
+
+		}
 	}
 
 	// t.ParentRevisionRef (atproto.RepoStrongRef) (struct)
@@ -533,7 +805,18 @@ func (t *FeedRecipeRevision) UnmarshalCBOR(r io.Reader) (err error) {
 		}
 
 		switch string(nameBuf[:nameLen]) {
-		// t.Tags ([]string) (slice)
+		// t.Name (string) (string)
+		case "name":
+
+			{
+				sval, err := cbg.ReadStringWithMax(cr, 1000000)
+				if err != nil {
+					return err
+				}
+
+				t.Name = string(sval)
+			}
+			// t.Tags ([]string) (slice)
 		case "tags":
 
 			maj, extra, err = cr.ReadHeader()
@@ -655,8 +938,8 @@ func (t *FeedRecipeRevision) UnmarshalCBOR(r io.Reader) (err error) {
 
 				}
 			}
-			// t.Steps ([]*foodios.FeedRecipeRevision_Step) (slice)
-		case "steps":
+			// t.Facets ([]*bsky.RichtextFacet) (slice)
+		case "facets":
 
 			maj, extra, err = cr.ReadHeader()
 			if err != nil {
@@ -664,7 +947,7 @@ func (t *FeedRecipeRevision) UnmarshalCBOR(r io.Reader) (err error) {
 			}
 
 			if extra > 8192 {
-				return fmt.Errorf("t.Steps: array too large (%d)", extra)
+				return fmt.Errorf("t.Facets: array too large (%d)", extra)
 			}
 
 			if maj != cbg.MajArray {
@@ -672,7 +955,7 @@ func (t *FeedRecipeRevision) UnmarshalCBOR(r io.Reader) (err error) {
 			}
 
 			if extra > 0 {
-				t.Steps = make([]*FeedRecipeRevision_Step, extra)
+				t.Facets = make([]*bsky.RichtextFacet, extra)
 			}
 
 			for i := 0; i < int(extra); i++ {
@@ -694,46 +977,15 @@ func (t *FeedRecipeRevision) UnmarshalCBOR(r io.Reader) (err error) {
 							if err := cr.UnreadByte(); err != nil {
 								return err
 							}
-							t.Steps[i] = new(FeedRecipeRevision_Step)
-							if err := t.Steps[i].UnmarshalCBOR(cr); err != nil {
-								return xerrors.Errorf("unmarshaling t.Steps[i] pointer: %w", err)
+							t.Facets[i] = new(bsky.RichtextFacet)
+							if err := t.Facets[i].UnmarshalCBOR(cr); err != nil {
+								return xerrors.Errorf("unmarshaling t.Facets[i] pointer: %w", err)
 							}
 						}
 
 					}
 
 				}
-			}
-			// t.Title (string) (string)
-		case "title":
-
-			{
-				sval, err := cbg.ReadStringWithMax(cr, 1000000)
-				if err != nil {
-					return err
-				}
-
-				t.Title = string(sval)
-			}
-			// t.Images (foodios.FeedRecipeRevision_Images) (struct)
-		case "images":
-
-			{
-
-				b, err := cr.ReadByte()
-				if err != nil {
-					return err
-				}
-				if b != cbg.CborNull[0] {
-					if err := cr.UnreadByte(); err != nil {
-						return err
-					}
-					t.Images = new(FeedRecipeRevision_Images)
-					if err := t.Images.UnmarshalCBOR(cr); err != nil {
-						return xerrors.Errorf("unmarshaling t.Images pointer: %w", err)
-					}
-				}
-
 			}
 			// t.Labels (foodios.FeedRecipeRevision_Labels) (struct)
 		case "labels":
@@ -755,6 +1007,27 @@ func (t *FeedRecipeRevision) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 			}
+			// t.PrepTime (string) (string)
+		case "prepTime":
+
+			{
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+
+					sval, err := cbg.ReadStringWithMax(cr, 1000000)
+					if err != nil {
+						return err
+					}
+
+					t.PrepTime = (*string)(&sval)
+				}
+			}
 			// t.CreatedAt (string) (string)
 		case "createdAt":
 
@@ -765,6 +1038,67 @@ func (t *FeedRecipeRevision) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 				t.CreatedAt = string(sval)
+			}
+			// t.Nutrition (foodios.FeedRecipeRevision_Nutrition) (struct)
+		case "nutrition":
+
+			{
+
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+					t.Nutrition = new(FeedRecipeRevision_Nutrition)
+					if err := t.Nutrition.UnmarshalCBOR(cr); err != nil {
+						return xerrors.Errorf("unmarshaling t.Nutrition pointer: %w", err)
+					}
+				}
+
+			}
+			// t.Attribution (foodios.FeedRecipeRevision_Attribution) (struct)
+		case "attribution":
+
+			{
+
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+					t.Attribution = new(FeedRecipeRevision_Attribution)
+					if err := t.Attribution.UnmarshalCBOR(cr); err != nil {
+						return xerrors.Errorf("unmarshaling t.Attribution pointer: %w", err)
+					}
+				}
+
+			}
+			// t.CookingTime (string) (string)
+		case "cookingTime":
+
+			{
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+
+					sval, err := cbg.ReadStringWithMax(cr, 1000000)
+					if err != nil {
+						return err
+					}
+
+					t.CookingTime = (*string)(&sval)
+				}
 			}
 			// t.Ingredients ([]*foodios.FeedRecipeRevision_Ingredient) (slice)
 		case "ingredients":
@@ -815,6 +1149,115 @@ func (t *FeedRecipeRevision) UnmarshalCBOR(r io.Reader) (err error) {
 
 				}
 			}
+			// t.RecipeYield (foodios.FeedRecipeRevision_QuantityAndUnit) (struct)
+		case "recipeYield":
+
+			{
+
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+					t.RecipeYield = new(FeedRecipeRevision_QuantityAndUnit)
+					if err := t.RecipeYield.UnmarshalCBOR(cr); err != nil {
+						return xerrors.Errorf("unmarshaling t.RecipeYield pointer: %w", err)
+					}
+				}
+
+			}
+			// t.Instructions ([]*foodios.FeedRecipeRevision_InstructionSection) (slice)
+		case "instructions":
+
+			maj, extra, err = cr.ReadHeader()
+			if err != nil {
+				return err
+			}
+
+			if extra > 8192 {
+				return fmt.Errorf("t.Instructions: array too large (%d)", extra)
+			}
+
+			if maj != cbg.MajArray {
+				return fmt.Errorf("expected cbor array")
+			}
+
+			if extra > 0 {
+				t.Instructions = make([]*FeedRecipeRevision_InstructionSection, extra)
+			}
+
+			for i := 0; i < int(extra); i++ {
+				{
+					var maj byte
+					var extra uint64
+					var err error
+					_ = maj
+					_ = extra
+					_ = err
+
+					{
+
+						b, err := cr.ReadByte()
+						if err != nil {
+							return err
+						}
+						if b != cbg.CborNull[0] {
+							if err := cr.UnreadByte(); err != nil {
+								return err
+							}
+							t.Instructions[i] = new(FeedRecipeRevision_InstructionSection)
+							if err := t.Instructions[i].UnmarshalCBOR(cr); err != nil {
+								return xerrors.Errorf("unmarshaling t.Instructions[i] pointer: %w", err)
+							}
+						}
+
+					}
+
+				}
+			}
+			// t.RecipeCuisine ([]string) (slice)
+		case "recipeCuisine":
+
+			maj, extra, err = cr.ReadHeader()
+			if err != nil {
+				return err
+			}
+
+			if extra > 8192 {
+				return fmt.Errorf("t.RecipeCuisine: array too large (%d)", extra)
+			}
+
+			if maj != cbg.MajArray {
+				return fmt.Errorf("expected cbor array")
+			}
+
+			if extra > 0 {
+				t.RecipeCuisine = make([]string, extra)
+			}
+
+			for i := 0; i < int(extra); i++ {
+				{
+					var maj byte
+					var extra uint64
+					var err error
+					_ = maj
+					_ = extra
+					_ = err
+
+					{
+						sval, err := cbg.ReadStringWithMax(cr, 1000000)
+						if err != nil {
+							return err
+						}
+
+						t.RecipeCuisine[i] = string(sval)
+					}
+
+				}
+			}
 			// t.RecipePostRef (atproto.RepoStrongRef) (struct)
 		case "recipePostRef":
 
@@ -834,6 +1277,86 @@ func (t *FeedRecipeRevision) UnmarshalCBOR(r io.Reader) (err error) {
 					}
 				}
 
+			}
+			// t.RecipeCategory ([]string) (slice)
+		case "recipeCategory":
+
+			maj, extra, err = cr.ReadHeader()
+			if err != nil {
+				return err
+			}
+
+			if extra > 8192 {
+				return fmt.Errorf("t.RecipeCategory: array too large (%d)", extra)
+			}
+
+			if maj != cbg.MajArray {
+				return fmt.Errorf("expected cbor array")
+			}
+
+			if extra > 0 {
+				t.RecipeCategory = make([]string, extra)
+			}
+
+			for i := 0; i < int(extra); i++ {
+				{
+					var maj byte
+					var extra uint64
+					var err error
+					_ = maj
+					_ = extra
+					_ = err
+
+					{
+						sval, err := cbg.ReadStringWithMax(cr, 1000000)
+						if err != nil {
+							return err
+						}
+
+						t.RecipeCategory[i] = string(sval)
+					}
+
+				}
+			}
+			// t.SuitableForDiet ([]string) (slice)
+		case "suitableForDiet":
+
+			maj, extra, err = cr.ReadHeader()
+			if err != nil {
+				return err
+			}
+
+			if extra > 8192 {
+				return fmt.Errorf("t.SuitableForDiet: array too large (%d)", extra)
+			}
+
+			if maj != cbg.MajArray {
+				return fmt.Errorf("expected cbor array")
+			}
+
+			if extra > 0 {
+				t.SuitableForDiet = make([]string, extra)
+			}
+
+			for i := 0; i < int(extra); i++ {
+				{
+					var maj byte
+					var extra uint64
+					var err error
+					_ = maj
+					_ = extra
+					_ = err
+
+					{
+						sval, err := cbg.ReadStringWithMax(cr, 1000000)
+						if err != nil {
+							return err
+						}
+
+						t.SuitableForDiet[i] = string(sval)
+					}
+
+				}
 			}
 			// t.ParentRevisionRef (atproto.RepoStrongRef) (struct)
 		case "parentRevisionRef":
@@ -1078,7 +1601,7 @@ func (t *FeedRecipeRevision_Ingredient) UnmarshalCBOR(r io.Reader) (err error) {
 
 	return nil
 }
-func (t *FeedRecipeRevision_Step) MarshalCBOR(w io.Writer) error {
+func (t *FeedRecipeRevision_Instruction) MarshalCBOR(w io.Writer) error {
 	if t == nil {
 		_, err := w.Write(cbg.CborNull)
 		return err
@@ -1118,7 +1641,7 @@ func (t *FeedRecipeRevision_Step) MarshalCBOR(w io.Writer) error {
 		return err
 	}
 
-	// t.Images (foodios.FeedRecipeRevision_Step_Images) (struct)
+	// t.Images (foodios.FeedRecipeRevision_Instruction_Images) (struct)
 	if t.Images != nil {
 
 		if len("images") > 1000000 {
@@ -1139,8 +1662,8 @@ func (t *FeedRecipeRevision_Step) MarshalCBOR(w io.Writer) error {
 	return nil
 }
 
-func (t *FeedRecipeRevision_Step) UnmarshalCBOR(r io.Reader) (err error) {
-	*t = FeedRecipeRevision_Step{}
+func (t *FeedRecipeRevision_Instruction) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = FeedRecipeRevision_Instruction{}
 
 	cr := cbg.NewCborReader(r)
 
@@ -1159,7 +1682,7 @@ func (t *FeedRecipeRevision_Step) UnmarshalCBOR(r io.Reader) (err error) {
 	}
 
 	if extra > cbg.MaxLength {
-		return fmt.Errorf("FeedRecipeRevision_Step: map struct too large (%d)", extra)
+		return fmt.Errorf("FeedRecipeRevision_Instruction: map struct too large (%d)", extra)
 	}
 
 	n := extra
@@ -1191,7 +1714,7 @@ func (t *FeedRecipeRevision_Step) UnmarshalCBOR(r io.Reader) (err error) {
 
 				t.Text = string(sval)
 			}
-			// t.Images (foodios.FeedRecipeRevision_Step_Images) (struct)
+			// t.Images (foodios.FeedRecipeRevision_Instruction_Images) (struct)
 		case "images":
 
 			{
@@ -1204,12 +1727,4418 @@ func (t *FeedRecipeRevision_Step) UnmarshalCBOR(r io.Reader) (err error) {
 					if err := cr.UnreadByte(); err != nil {
 						return err
 					}
-					t.Images = new(FeedRecipeRevision_Step_Images)
+					t.Images = new(FeedRecipeRevision_Instruction_Images)
 					if err := t.Images.UnmarshalCBOR(cr); err != nil {
 						return xerrors.Errorf("unmarshaling t.Images pointer: %w", err)
 					}
 				}
 
+			}
+
+		default:
+			// Field doesn't exist on this type, so ignore it
+			if err := cbg.ScanForLinks(r, func(cid.Cid) {}); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+func (t *FeedRecipeRevision_QuantityAndUnit) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+
+	if _, err := cw.Write([]byte{162}); err != nil {
+		return err
+	}
+
+	// t.Unit (string) (string)
+	if len("unit") > 1000000 {
+		return xerrors.Errorf("Value in field \"unit\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("unit"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("unit")); err != nil {
+		return err
+	}
+
+	if len(t.Unit) > 1000000 {
+		return xerrors.Errorf("Value in field t.Unit was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(t.Unit))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string(t.Unit)); err != nil {
+		return err
+	}
+
+	// t.Quantity (string) (string)
+	if len("quantity") > 1000000 {
+		return xerrors.Errorf("Value in field \"quantity\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("quantity"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("quantity")); err != nil {
+		return err
+	}
+
+	if len(t.Quantity) > 1000000 {
+		return xerrors.Errorf("Value in field t.Quantity was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(t.Quantity))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string(t.Quantity)); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *FeedRecipeRevision_QuantityAndUnit) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = FeedRecipeRevision_QuantityAndUnit{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajMap {
+		return fmt.Errorf("cbor input should be of type map")
+	}
+
+	if extra > cbg.MaxLength {
+		return fmt.Errorf("FeedRecipeRevision_QuantityAndUnit: map struct too large (%d)", extra)
+	}
+
+	n := extra
+
+	nameBuf := make([]byte, 8)
+	for i := uint64(0); i < n; i++ {
+		nameLen, ok, err := cbg.ReadFullStringIntoBuf(cr, nameBuf, 1000000)
+		if err != nil {
+			return err
+		}
+
+		if !ok {
+			// Field doesn't exist on this type, so ignore it
+			if err := cbg.ScanForLinks(cr, func(cid.Cid) {}); err != nil {
+				return err
+			}
+			continue
+		}
+
+		switch string(nameBuf[:nameLen]) {
+		// t.Unit (string) (string)
+		case "unit":
+
+			{
+				sval, err := cbg.ReadStringWithMax(cr, 1000000)
+				if err != nil {
+					return err
+				}
+
+				t.Unit = string(sval)
+			}
+			// t.Quantity (string) (string)
+		case "quantity":
+
+			{
+				sval, err := cbg.ReadStringWithMax(cr, 1000000)
+				if err != nil {
+					return err
+				}
+
+				t.Quantity = string(sval)
+			}
+
+		default:
+			// Field doesn't exist on this type, so ignore it
+			if err := cbg.ScanForLinks(r, func(cid.Cid) {}); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+func (t *FeedRecipeRevision_InstructionSection) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+	fieldCount := 3
+
+	if t.Images == nil {
+		fieldCount--
+	}
+
+	if t.Name == nil {
+		fieldCount--
+	}
+
+	if _, err := cw.Write(cbg.CborEncodeMajorType(cbg.MajMap, uint64(fieldCount))); err != nil {
+		return err
+	}
+
+	// t.Name (string) (string)
+	if t.Name != nil {
+
+		if len("name") > 1000000 {
+			return xerrors.Errorf("Value in field \"name\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("name"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("name")); err != nil {
+			return err
+		}
+
+		if t.Name == nil {
+			if _, err := cw.Write(cbg.CborNull); err != nil {
+				return err
+			}
+		} else {
+			if len(*t.Name) > 1000000 {
+				return xerrors.Errorf("Value in field t.Name was too long")
+			}
+
+			if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(*t.Name))); err != nil {
+				return err
+			}
+			if _, err := cw.WriteString(string(*t.Name)); err != nil {
+				return err
+			}
+		}
+	}
+
+	// t.Images (foodios.FeedRecipeRevision_InstructionSection_Images) (struct)
+	if t.Images != nil {
+
+		if len("images") > 1000000 {
+			return xerrors.Errorf("Value in field \"images\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("images"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("images")); err != nil {
+			return err
+		}
+
+		if err := t.Images.MarshalCBOR(cw); err != nil {
+			return err
+		}
+	}
+
+	// t.Instructions ([]*foodios.FeedRecipeRevision_Instruction) (slice)
+	if len("instructions") > 1000000 {
+		return xerrors.Errorf("Value in field \"instructions\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("instructions"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("instructions")); err != nil {
+		return err
+	}
+
+	if len(t.Instructions) > 8192 {
+		return xerrors.Errorf("Slice value in field t.Instructions was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajArray, uint64(len(t.Instructions))); err != nil {
+		return err
+	}
+	for _, v := range t.Instructions {
+		if err := v.MarshalCBOR(cw); err != nil {
+			return err
+		}
+
+	}
+	return nil
+}
+
+func (t *FeedRecipeRevision_InstructionSection) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = FeedRecipeRevision_InstructionSection{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajMap {
+		return fmt.Errorf("cbor input should be of type map")
+	}
+
+	if extra > cbg.MaxLength {
+		return fmt.Errorf("FeedRecipeRevision_InstructionSection: map struct too large (%d)", extra)
+	}
+
+	n := extra
+
+	nameBuf := make([]byte, 12)
+	for i := uint64(0); i < n; i++ {
+		nameLen, ok, err := cbg.ReadFullStringIntoBuf(cr, nameBuf, 1000000)
+		if err != nil {
+			return err
+		}
+
+		if !ok {
+			// Field doesn't exist on this type, so ignore it
+			if err := cbg.ScanForLinks(cr, func(cid.Cid) {}); err != nil {
+				return err
+			}
+			continue
+		}
+
+		switch string(nameBuf[:nameLen]) {
+		// t.Name (string) (string)
+		case "name":
+
+			{
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+
+					sval, err := cbg.ReadStringWithMax(cr, 1000000)
+					if err != nil {
+						return err
+					}
+
+					t.Name = (*string)(&sval)
+				}
+			}
+			// t.Images (foodios.FeedRecipeRevision_InstructionSection_Images) (struct)
+		case "images":
+
+			{
+
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+					t.Images = new(FeedRecipeRevision_InstructionSection_Images)
+					if err := t.Images.UnmarshalCBOR(cr); err != nil {
+						return xerrors.Errorf("unmarshaling t.Images pointer: %w", err)
+					}
+				}
+
+			}
+			// t.Instructions ([]*foodios.FeedRecipeRevision_Instruction) (slice)
+		case "instructions":
+
+			maj, extra, err = cr.ReadHeader()
+			if err != nil {
+				return err
+			}
+
+			if extra > 8192 {
+				return fmt.Errorf("t.Instructions: array too large (%d)", extra)
+			}
+
+			if maj != cbg.MajArray {
+				return fmt.Errorf("expected cbor array")
+			}
+
+			if extra > 0 {
+				t.Instructions = make([]*FeedRecipeRevision_Instruction, extra)
+			}
+
+			for i := 0; i < int(extra); i++ {
+				{
+					var maj byte
+					var extra uint64
+					var err error
+					_ = maj
+					_ = extra
+					_ = err
+
+					{
+
+						b, err := cr.ReadByte()
+						if err != nil {
+							return err
+						}
+						if b != cbg.CborNull[0] {
+							if err := cr.UnreadByte(); err != nil {
+								return err
+							}
+							t.Instructions[i] = new(FeedRecipeRevision_Instruction)
+							if err := t.Instructions[i].UnmarshalCBOR(cr); err != nil {
+								return xerrors.Errorf("unmarshaling t.Instructions[i] pointer: %w", err)
+							}
+						}
+
+					}
+
+				}
+			}
+
+		default:
+			// Field doesn't exist on this type, so ignore it
+			if err := cbg.ScanForLinks(r, func(cid.Cid) {}); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+func (t *FeedRecipeRevision_Nutrition) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+	fieldCount := 12
+
+	if t.CarbohydrateContent == nil {
+		fieldCount--
+	}
+
+	if t.CholesterolContent == nil {
+		fieldCount--
+	}
+
+	if t.FatContent == nil {
+		fieldCount--
+	}
+
+	if t.FiberContent == nil {
+		fieldCount--
+	}
+
+	if t.ProteinContent == nil {
+		fieldCount--
+	}
+
+	if t.SaturatedFatContent == nil {
+		fieldCount--
+	}
+
+	if t.SodiumContent == nil {
+		fieldCount--
+	}
+
+	if t.SugarContent == nil {
+		fieldCount--
+	}
+
+	if t.TransFatContent == nil {
+		fieldCount--
+	}
+
+	if t.UnsaturatedFatContent == nil {
+		fieldCount--
+	}
+
+	if _, err := cw.Write(cbg.CborEncodeMajorType(cbg.MajMap, uint64(fieldCount))); err != nil {
+		return err
+	}
+
+	// t.Energy (string) (string)
+	if len("energy") > 1000000 {
+		return xerrors.Errorf("Value in field \"energy\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("energy"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("energy")); err != nil {
+		return err
+	}
+
+	if len(t.Energy) > 1000000 {
+		return xerrors.Errorf("Value in field t.Energy was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(t.Energy))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string(t.Energy)); err != nil {
+		return err
+	}
+
+	// t.FatContent (string) (string)
+	if t.FatContent != nil {
+
+		if len("fatContent") > 1000000 {
+			return xerrors.Errorf("Value in field \"fatContent\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("fatContent"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("fatContent")); err != nil {
+			return err
+		}
+
+		if t.FatContent == nil {
+			if _, err := cw.Write(cbg.CborNull); err != nil {
+				return err
+			}
+		} else {
+			if len(*t.FatContent) > 1000000 {
+				return xerrors.Errorf("Value in field t.FatContent was too long")
+			}
+
+			if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(*t.FatContent))); err != nil {
+				return err
+			}
+			if _, err := cw.WriteString(string(*t.FatContent)); err != nil {
+				return err
+			}
+		}
+	}
+
+	// t.ServingSize (foodios.FeedRecipeRevision_QuantityAndUnit) (struct)
+	if len("servingSize") > 1000000 {
+		return xerrors.Errorf("Value in field \"servingSize\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("servingSize"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("servingSize")); err != nil {
+		return err
+	}
+
+	if err := t.ServingSize.MarshalCBOR(cw); err != nil {
+		return err
+	}
+
+	// t.FiberContent (string) (string)
+	if t.FiberContent != nil {
+
+		if len("fiberContent") > 1000000 {
+			return xerrors.Errorf("Value in field \"fiberContent\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("fiberContent"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("fiberContent")); err != nil {
+			return err
+		}
+
+		if t.FiberContent == nil {
+			if _, err := cw.Write(cbg.CborNull); err != nil {
+				return err
+			}
+		} else {
+			if len(*t.FiberContent) > 1000000 {
+				return xerrors.Errorf("Value in field t.FiberContent was too long")
+			}
+
+			if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(*t.FiberContent))); err != nil {
+				return err
+			}
+			if _, err := cw.WriteString(string(*t.FiberContent)); err != nil {
+				return err
+			}
+		}
+	}
+
+	// t.SugarContent (string) (string)
+	if t.SugarContent != nil {
+
+		if len("sugarContent") > 1000000 {
+			return xerrors.Errorf("Value in field \"sugarContent\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("sugarContent"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("sugarContent")); err != nil {
+			return err
+		}
+
+		if t.SugarContent == nil {
+			if _, err := cw.Write(cbg.CborNull); err != nil {
+				return err
+			}
+		} else {
+			if len(*t.SugarContent) > 1000000 {
+				return xerrors.Errorf("Value in field t.SugarContent was too long")
+			}
+
+			if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(*t.SugarContent))); err != nil {
+				return err
+			}
+			if _, err := cw.WriteString(string(*t.SugarContent)); err != nil {
+				return err
+			}
+		}
+	}
+
+	// t.SodiumContent (string) (string)
+	if t.SodiumContent != nil {
+
+		if len("sodiumContent") > 1000000 {
+			return xerrors.Errorf("Value in field \"sodiumContent\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("sodiumContent"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("sodiumContent")); err != nil {
+			return err
+		}
+
+		if t.SodiumContent == nil {
+			if _, err := cw.Write(cbg.CborNull); err != nil {
+				return err
+			}
+		} else {
+			if len(*t.SodiumContent) > 1000000 {
+				return xerrors.Errorf("Value in field t.SodiumContent was too long")
+			}
+
+			if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(*t.SodiumContent))); err != nil {
+				return err
+			}
+			if _, err := cw.WriteString(string(*t.SodiumContent)); err != nil {
+				return err
+			}
+		}
+	}
+
+	// t.ProteinContent (string) (string)
+	if t.ProteinContent != nil {
+
+		if len("proteinContent") > 1000000 {
+			return xerrors.Errorf("Value in field \"proteinContent\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("proteinContent"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("proteinContent")); err != nil {
+			return err
+		}
+
+		if t.ProteinContent == nil {
+			if _, err := cw.Write(cbg.CborNull); err != nil {
+				return err
+			}
+		} else {
+			if len(*t.ProteinContent) > 1000000 {
+				return xerrors.Errorf("Value in field t.ProteinContent was too long")
+			}
+
+			if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(*t.ProteinContent))); err != nil {
+				return err
+			}
+			if _, err := cw.WriteString(string(*t.ProteinContent)); err != nil {
+				return err
+			}
+		}
+	}
+
+	// t.TransFatContent (string) (string)
+	if t.TransFatContent != nil {
+
+		if len("transFatContent") > 1000000 {
+			return xerrors.Errorf("Value in field \"transFatContent\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("transFatContent"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("transFatContent")); err != nil {
+			return err
+		}
+
+		if t.TransFatContent == nil {
+			if _, err := cw.Write(cbg.CborNull); err != nil {
+				return err
+			}
+		} else {
+			if len(*t.TransFatContent) > 1000000 {
+				return xerrors.Errorf("Value in field t.TransFatContent was too long")
+			}
+
+			if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(*t.TransFatContent))); err != nil {
+				return err
+			}
+			if _, err := cw.WriteString(string(*t.TransFatContent)); err != nil {
+				return err
+			}
+		}
+	}
+
+	// t.CholesterolContent (string) (string)
+	if t.CholesterolContent != nil {
+
+		if len("cholesterolContent") > 1000000 {
+			return xerrors.Errorf("Value in field \"cholesterolContent\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("cholesterolContent"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("cholesterolContent")); err != nil {
+			return err
+		}
+
+		if t.CholesterolContent == nil {
+			if _, err := cw.Write(cbg.CborNull); err != nil {
+				return err
+			}
+		} else {
+			if len(*t.CholesterolContent) > 1000000 {
+				return xerrors.Errorf("Value in field t.CholesterolContent was too long")
+			}
+
+			if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(*t.CholesterolContent))); err != nil {
+				return err
+			}
+			if _, err := cw.WriteString(string(*t.CholesterolContent)); err != nil {
+				return err
+			}
+		}
+	}
+
+	// t.CarbohydrateContent (string) (string)
+	if t.CarbohydrateContent != nil {
+
+		if len("carbohydrateContent") > 1000000 {
+			return xerrors.Errorf("Value in field \"carbohydrateContent\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("carbohydrateContent"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("carbohydrateContent")); err != nil {
+			return err
+		}
+
+		if t.CarbohydrateContent == nil {
+			if _, err := cw.Write(cbg.CborNull); err != nil {
+				return err
+			}
+		} else {
+			if len(*t.CarbohydrateContent) > 1000000 {
+				return xerrors.Errorf("Value in field t.CarbohydrateContent was too long")
+			}
+
+			if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(*t.CarbohydrateContent))); err != nil {
+				return err
+			}
+			if _, err := cw.WriteString(string(*t.CarbohydrateContent)); err != nil {
+				return err
+			}
+		}
+	}
+
+	// t.SaturatedFatContent (string) (string)
+	if t.SaturatedFatContent != nil {
+
+		if len("saturatedFatContent") > 1000000 {
+			return xerrors.Errorf("Value in field \"saturatedFatContent\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("saturatedFatContent"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("saturatedFatContent")); err != nil {
+			return err
+		}
+
+		if t.SaturatedFatContent == nil {
+			if _, err := cw.Write(cbg.CborNull); err != nil {
+				return err
+			}
+		} else {
+			if len(*t.SaturatedFatContent) > 1000000 {
+				return xerrors.Errorf("Value in field t.SaturatedFatContent was too long")
+			}
+
+			if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(*t.SaturatedFatContent))); err != nil {
+				return err
+			}
+			if _, err := cw.WriteString(string(*t.SaturatedFatContent)); err != nil {
+				return err
+			}
+		}
+	}
+
+	// t.UnsaturatedFatContent (string) (string)
+	if t.UnsaturatedFatContent != nil {
+
+		if len("unsaturatedFatContent") > 1000000 {
+			return xerrors.Errorf("Value in field \"unsaturatedFatContent\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("unsaturatedFatContent"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("unsaturatedFatContent")); err != nil {
+			return err
+		}
+
+		if t.UnsaturatedFatContent == nil {
+			if _, err := cw.Write(cbg.CborNull); err != nil {
+				return err
+			}
+		} else {
+			if len(*t.UnsaturatedFatContent) > 1000000 {
+				return xerrors.Errorf("Value in field t.UnsaturatedFatContent was too long")
+			}
+
+			if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(*t.UnsaturatedFatContent))); err != nil {
+				return err
+			}
+			if _, err := cw.WriteString(string(*t.UnsaturatedFatContent)); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (t *FeedRecipeRevision_Nutrition) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = FeedRecipeRevision_Nutrition{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajMap {
+		return fmt.Errorf("cbor input should be of type map")
+	}
+
+	if extra > cbg.MaxLength {
+		return fmt.Errorf("FeedRecipeRevision_Nutrition: map struct too large (%d)", extra)
+	}
+
+	n := extra
+
+	nameBuf := make([]byte, 21)
+	for i := uint64(0); i < n; i++ {
+		nameLen, ok, err := cbg.ReadFullStringIntoBuf(cr, nameBuf, 1000000)
+		if err != nil {
+			return err
+		}
+
+		if !ok {
+			// Field doesn't exist on this type, so ignore it
+			if err := cbg.ScanForLinks(cr, func(cid.Cid) {}); err != nil {
+				return err
+			}
+			continue
+		}
+
+		switch string(nameBuf[:nameLen]) {
+		// t.Energy (string) (string)
+		case "energy":
+
+			{
+				sval, err := cbg.ReadStringWithMax(cr, 1000000)
+				if err != nil {
+					return err
+				}
+
+				t.Energy = string(sval)
+			}
+			// t.FatContent (string) (string)
+		case "fatContent":
+
+			{
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+
+					sval, err := cbg.ReadStringWithMax(cr, 1000000)
+					if err != nil {
+						return err
+					}
+
+					t.FatContent = (*string)(&sval)
+				}
+			}
+			// t.ServingSize (foodios.FeedRecipeRevision_QuantityAndUnit) (struct)
+		case "servingSize":
+
+			{
+
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+					t.ServingSize = new(FeedRecipeRevision_QuantityAndUnit)
+					if err := t.ServingSize.UnmarshalCBOR(cr); err != nil {
+						return xerrors.Errorf("unmarshaling t.ServingSize pointer: %w", err)
+					}
+				}
+
+			}
+			// t.FiberContent (string) (string)
+		case "fiberContent":
+
+			{
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+
+					sval, err := cbg.ReadStringWithMax(cr, 1000000)
+					if err != nil {
+						return err
+					}
+
+					t.FiberContent = (*string)(&sval)
+				}
+			}
+			// t.SugarContent (string) (string)
+		case "sugarContent":
+
+			{
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+
+					sval, err := cbg.ReadStringWithMax(cr, 1000000)
+					if err != nil {
+						return err
+					}
+
+					t.SugarContent = (*string)(&sval)
+				}
+			}
+			// t.SodiumContent (string) (string)
+		case "sodiumContent":
+
+			{
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+
+					sval, err := cbg.ReadStringWithMax(cr, 1000000)
+					if err != nil {
+						return err
+					}
+
+					t.SodiumContent = (*string)(&sval)
+				}
+			}
+			// t.ProteinContent (string) (string)
+		case "proteinContent":
+
+			{
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+
+					sval, err := cbg.ReadStringWithMax(cr, 1000000)
+					if err != nil {
+						return err
+					}
+
+					t.ProteinContent = (*string)(&sval)
+				}
+			}
+			// t.TransFatContent (string) (string)
+		case "transFatContent":
+
+			{
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+
+					sval, err := cbg.ReadStringWithMax(cr, 1000000)
+					if err != nil {
+						return err
+					}
+
+					t.TransFatContent = (*string)(&sval)
+				}
+			}
+			// t.CholesterolContent (string) (string)
+		case "cholesterolContent":
+
+			{
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+
+					sval, err := cbg.ReadStringWithMax(cr, 1000000)
+					if err != nil {
+						return err
+					}
+
+					t.CholesterolContent = (*string)(&sval)
+				}
+			}
+			// t.CarbohydrateContent (string) (string)
+		case "carbohydrateContent":
+
+			{
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+
+					sval, err := cbg.ReadStringWithMax(cr, 1000000)
+					if err != nil {
+						return err
+					}
+
+					t.CarbohydrateContent = (*string)(&sval)
+				}
+			}
+			// t.SaturatedFatContent (string) (string)
+		case "saturatedFatContent":
+
+			{
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+
+					sval, err := cbg.ReadStringWithMax(cr, 1000000)
+					if err != nil {
+						return err
+					}
+
+					t.SaturatedFatContent = (*string)(&sval)
+				}
+			}
+			// t.UnsaturatedFatContent (string) (string)
+		case "unsaturatedFatContent":
+
+			{
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+
+					sval, err := cbg.ReadStringWithMax(cr, 1000000)
+					if err != nil {
+						return err
+					}
+
+					t.UnsaturatedFatContent = (*string)(&sval)
+				}
+			}
+
+		default:
+			// Field doesn't exist on this type, so ignore it
+			if err := cbg.ScanForLinks(r, func(cid.Cid) {}); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+func (t *FeedRecipeRevision_WebsiteAttribution) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+	fieldCount := 5
+
+	if t.Notes == nil {
+		fieldCount--
+	}
+
+	if _, err := cw.Write(cbg.CborEncodeMajorType(cbg.MajMap, uint64(fieldCount))); err != nil {
+		return err
+	}
+
+	// t.Url (string) (string)
+	if len("url") > 1000000 {
+		return xerrors.Errorf("Value in field \"url\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("url"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("url")); err != nil {
+		return err
+	}
+
+	if len(t.Url) > 1000000 {
+		return xerrors.Errorf("Value in field t.Url was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(t.Url))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string(t.Url)); err != nil {
+		return err
+	}
+
+	// t.Name (string) (string)
+	if len("name") > 1000000 {
+		return xerrors.Errorf("Value in field \"name\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("name"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("name")); err != nil {
+		return err
+	}
+
+	if len(t.Name) > 1000000 {
+		return xerrors.Errorf("Value in field t.Name was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(t.Name))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string(t.Name)); err != nil {
+		return err
+	}
+
+	// t.Type (string) (string)
+	if len("type") > 1000000 {
+		return xerrors.Errorf("Value in field \"type\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("type"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("type")); err != nil {
+		return err
+	}
+
+	if len(t.Type) > 1000000 {
+		return xerrors.Errorf("Value in field t.Type was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(t.Type))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string(t.Type)); err != nil {
+		return err
+	}
+
+	// t.LexiconTypeID (string) (string)
+	if len("$type") > 1000000 {
+		return xerrors.Errorf("Value in field \"$type\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("$type"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("$type")); err != nil {
+		return err
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("app.foodios.feed.recipeRevision#websiteAttribution"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("app.foodios.feed.recipeRevision#websiteAttribution")); err != nil {
+		return err
+	}
+
+	// t.Notes (string) (string)
+	if t.Notes != nil {
+
+		if len("notes") > 1000000 {
+			return xerrors.Errorf("Value in field \"notes\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("notes"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("notes")); err != nil {
+			return err
+		}
+
+		if t.Notes == nil {
+			if _, err := cw.Write(cbg.CborNull); err != nil {
+				return err
+			}
+		} else {
+			if len(*t.Notes) > 1000000 {
+				return xerrors.Errorf("Value in field t.Notes was too long")
+			}
+
+			if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(*t.Notes))); err != nil {
+				return err
+			}
+			if _, err := cw.WriteString(string(*t.Notes)); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (t *FeedRecipeRevision_WebsiteAttribution) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = FeedRecipeRevision_WebsiteAttribution{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajMap {
+		return fmt.Errorf("cbor input should be of type map")
+	}
+
+	if extra > cbg.MaxLength {
+		return fmt.Errorf("FeedRecipeRevision_WebsiteAttribution: map struct too large (%d)", extra)
+	}
+
+	n := extra
+
+	nameBuf := make([]byte, 5)
+	for i := uint64(0); i < n; i++ {
+		nameLen, ok, err := cbg.ReadFullStringIntoBuf(cr, nameBuf, 1000000)
+		if err != nil {
+			return err
+		}
+
+		if !ok {
+			// Field doesn't exist on this type, so ignore it
+			if err := cbg.ScanForLinks(cr, func(cid.Cid) {}); err != nil {
+				return err
+			}
+			continue
+		}
+
+		switch string(nameBuf[:nameLen]) {
+		// t.Url (string) (string)
+		case "url":
+
+			{
+				sval, err := cbg.ReadStringWithMax(cr, 1000000)
+				if err != nil {
+					return err
+				}
+
+				t.Url = string(sval)
+			}
+			// t.Name (string) (string)
+		case "name":
+
+			{
+				sval, err := cbg.ReadStringWithMax(cr, 1000000)
+				if err != nil {
+					return err
+				}
+
+				t.Name = string(sval)
+			}
+			// t.Type (string) (string)
+		case "type":
+
+			{
+				sval, err := cbg.ReadStringWithMax(cr, 1000000)
+				if err != nil {
+					return err
+				}
+
+				t.Type = string(sval)
+			}
+			// t.LexiconTypeID (string) (string)
+		case "$type":
+
+			{
+				sval, err := cbg.ReadStringWithMax(cr, 1000000)
+				if err != nil {
+					return err
+				}
+
+				t.LexiconTypeID = string(sval)
+			}
+			// t.Notes (string) (string)
+		case "notes":
+
+			{
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+
+					sval, err := cbg.ReadStringWithMax(cr, 1000000)
+					if err != nil {
+						return err
+					}
+
+					t.Notes = (*string)(&sval)
+				}
+			}
+
+		default:
+			// Field doesn't exist on this type, so ignore it
+			if err := cbg.ScanForLinks(r, func(cid.Cid) {}); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+func (t *FeedRecipeRevision_ShowAttribution) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+	fieldCount := 8
+
+	if t.AirDate == nil {
+		fieldCount--
+	}
+
+	if t.Episode == nil {
+		fieldCount--
+	}
+
+	if t.Notes == nil {
+		fieldCount--
+	}
+
+	if t.Url == nil {
+		fieldCount--
+	}
+
+	if _, err := cw.Write(cbg.CborEncodeMajorType(cbg.MajMap, uint64(fieldCount))); err != nil {
+		return err
+	}
+
+	// t.Url (string) (string)
+	if t.Url != nil {
+
+		if len("url") > 1000000 {
+			return xerrors.Errorf("Value in field \"url\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("url"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("url")); err != nil {
+			return err
+		}
+
+		if t.Url == nil {
+			if _, err := cw.Write(cbg.CborNull); err != nil {
+				return err
+			}
+		} else {
+			if len(*t.Url) > 1000000 {
+				return xerrors.Errorf("Value in field t.Url was too long")
+			}
+
+			if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(*t.Url))); err != nil {
+				return err
+			}
+			if _, err := cw.WriteString(string(*t.Url)); err != nil {
+				return err
+			}
+		}
+	}
+
+	// t.Type (string) (string)
+	if len("type") > 1000000 {
+		return xerrors.Errorf("Value in field \"type\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("type"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("type")); err != nil {
+		return err
+	}
+
+	if len(t.Type) > 1000000 {
+		return xerrors.Errorf("Value in field t.Type was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(t.Type))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string(t.Type)); err != nil {
+		return err
+	}
+
+	// t.LexiconTypeID (string) (string)
+	if len("$type") > 1000000 {
+		return xerrors.Errorf("Value in field \"$type\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("$type"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("$type")); err != nil {
+		return err
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("app.foodios.feed.recipeRevision#showAttribution"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("app.foodios.feed.recipeRevision#showAttribution")); err != nil {
+		return err
+	}
+
+	// t.Notes (string) (string)
+	if t.Notes != nil {
+
+		if len("notes") > 1000000 {
+			return xerrors.Errorf("Value in field \"notes\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("notes"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("notes")); err != nil {
+			return err
+		}
+
+		if t.Notes == nil {
+			if _, err := cw.Write(cbg.CborNull); err != nil {
+				return err
+			}
+		} else {
+			if len(*t.Notes) > 1000000 {
+				return xerrors.Errorf("Value in field t.Notes was too long")
+			}
+
+			if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(*t.Notes))); err != nil {
+				return err
+			}
+			if _, err := cw.WriteString(string(*t.Notes)); err != nil {
+				return err
+			}
+		}
+	}
+
+	// t.Title (string) (string)
+	if len("title") > 1000000 {
+		return xerrors.Errorf("Value in field \"title\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("title"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("title")); err != nil {
+		return err
+	}
+
+	if len(t.Title) > 1000000 {
+		return xerrors.Errorf("Value in field t.Title was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(t.Title))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string(t.Title)); err != nil {
+		return err
+	}
+
+	// t.AirDate (string) (string)
+	if t.AirDate != nil {
+
+		if len("airDate") > 1000000 {
+			return xerrors.Errorf("Value in field \"airDate\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("airDate"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("airDate")); err != nil {
+			return err
+		}
+
+		if t.AirDate == nil {
+			if _, err := cw.Write(cbg.CborNull); err != nil {
+				return err
+			}
+		} else {
+			if len(*t.AirDate) > 1000000 {
+				return xerrors.Errorf("Value in field t.AirDate was too long")
+			}
+
+			if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(*t.AirDate))); err != nil {
+				return err
+			}
+			if _, err := cw.WriteString(string(*t.AirDate)); err != nil {
+				return err
+			}
+		}
+	}
+
+	// t.Episode (string) (string)
+	if t.Episode != nil {
+
+		if len("episode") > 1000000 {
+			return xerrors.Errorf("Value in field \"episode\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("episode"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("episode")); err != nil {
+			return err
+		}
+
+		if t.Episode == nil {
+			if _, err := cw.Write(cbg.CborNull); err != nil {
+				return err
+			}
+		} else {
+			if len(*t.Episode) > 1000000 {
+				return xerrors.Errorf("Value in field t.Episode was too long")
+			}
+
+			if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(*t.Episode))); err != nil {
+				return err
+			}
+			if _, err := cw.WriteString(string(*t.Episode)); err != nil {
+				return err
+			}
+		}
+	}
+
+	// t.Network (string) (string)
+	if len("network") > 1000000 {
+		return xerrors.Errorf("Value in field \"network\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("network"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("network")); err != nil {
+		return err
+	}
+
+	if len(t.Network) > 1000000 {
+		return xerrors.Errorf("Value in field t.Network was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(t.Network))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string(t.Network)); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *FeedRecipeRevision_ShowAttribution) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = FeedRecipeRevision_ShowAttribution{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajMap {
+		return fmt.Errorf("cbor input should be of type map")
+	}
+
+	if extra > cbg.MaxLength {
+		return fmt.Errorf("FeedRecipeRevision_ShowAttribution: map struct too large (%d)", extra)
+	}
+
+	n := extra
+
+	nameBuf := make([]byte, 7)
+	for i := uint64(0); i < n; i++ {
+		nameLen, ok, err := cbg.ReadFullStringIntoBuf(cr, nameBuf, 1000000)
+		if err != nil {
+			return err
+		}
+
+		if !ok {
+			// Field doesn't exist on this type, so ignore it
+			if err := cbg.ScanForLinks(cr, func(cid.Cid) {}); err != nil {
+				return err
+			}
+			continue
+		}
+
+		switch string(nameBuf[:nameLen]) {
+		// t.Url (string) (string)
+		case "url":
+
+			{
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+
+					sval, err := cbg.ReadStringWithMax(cr, 1000000)
+					if err != nil {
+						return err
+					}
+
+					t.Url = (*string)(&sval)
+				}
+			}
+			// t.Type (string) (string)
+		case "type":
+
+			{
+				sval, err := cbg.ReadStringWithMax(cr, 1000000)
+				if err != nil {
+					return err
+				}
+
+				t.Type = string(sval)
+			}
+			// t.LexiconTypeID (string) (string)
+		case "$type":
+
+			{
+				sval, err := cbg.ReadStringWithMax(cr, 1000000)
+				if err != nil {
+					return err
+				}
+
+				t.LexiconTypeID = string(sval)
+			}
+			// t.Notes (string) (string)
+		case "notes":
+
+			{
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+
+					sval, err := cbg.ReadStringWithMax(cr, 1000000)
+					if err != nil {
+						return err
+					}
+
+					t.Notes = (*string)(&sval)
+				}
+			}
+			// t.Title (string) (string)
+		case "title":
+
+			{
+				sval, err := cbg.ReadStringWithMax(cr, 1000000)
+				if err != nil {
+					return err
+				}
+
+				t.Title = string(sval)
+			}
+			// t.AirDate (string) (string)
+		case "airDate":
+
+			{
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+
+					sval, err := cbg.ReadStringWithMax(cr, 1000000)
+					if err != nil {
+						return err
+					}
+
+					t.AirDate = (*string)(&sval)
+				}
+			}
+			// t.Episode (string) (string)
+		case "episode":
+
+			{
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+
+					sval, err := cbg.ReadStringWithMax(cr, 1000000)
+					if err != nil {
+						return err
+					}
+
+					t.Episode = (*string)(&sval)
+				}
+			}
+			// t.Network (string) (string)
+		case "network":
+
+			{
+				sval, err := cbg.ReadStringWithMax(cr, 1000000)
+				if err != nil {
+					return err
+				}
+
+				t.Network = string(sval)
+			}
+
+		default:
+			// Field doesn't exist on this type, so ignore it
+			if err := cbg.ScanForLinks(r, func(cid.Cid) {}); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+func (t *FeedRecipeRevision_PublicationAttribution) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+	fieldCount := 10
+
+	if t.Isbn == nil {
+		fieldCount--
+	}
+
+	if t.Notes == nil {
+		fieldCount--
+	}
+
+	if t.Page == nil {
+		fieldCount--
+	}
+
+	if t.Publisher == nil {
+		fieldCount--
+	}
+
+	if t.Url == nil {
+		fieldCount--
+	}
+
+	if _, err := cw.Write(cbg.CborEncodeMajorType(cbg.MajMap, uint64(fieldCount))); err != nil {
+		return err
+	}
+
+	// t.Url (string) (string)
+	if t.Url != nil {
+
+		if len("url") > 1000000 {
+			return xerrors.Errorf("Value in field \"url\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("url"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("url")); err != nil {
+			return err
+		}
+
+		if t.Url == nil {
+			if _, err := cw.Write(cbg.CborNull); err != nil {
+				return err
+			}
+		} else {
+			if len(*t.Url) > 1000000 {
+				return xerrors.Errorf("Value in field t.Url was too long")
+			}
+
+			if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(*t.Url))); err != nil {
+				return err
+			}
+			if _, err := cw.WriteString(string(*t.Url)); err != nil {
+				return err
+			}
+		}
+	}
+
+	// t.Isbn (string) (string)
+	if t.Isbn != nil {
+
+		if len("isbn") > 1000000 {
+			return xerrors.Errorf("Value in field \"isbn\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("isbn"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("isbn")); err != nil {
+			return err
+		}
+
+		if t.Isbn == nil {
+			if _, err := cw.Write(cbg.CborNull); err != nil {
+				return err
+			}
+		} else {
+			if len(*t.Isbn) > 1000000 {
+				return xerrors.Errorf("Value in field t.Isbn was too long")
+			}
+
+			if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(*t.Isbn))); err != nil {
+				return err
+			}
+			if _, err := cw.WriteString(string(*t.Isbn)); err != nil {
+				return err
+			}
+		}
+	}
+
+	// t.Page (int64) (int64)
+	if t.Page != nil {
+
+		if len("page") > 1000000 {
+			return xerrors.Errorf("Value in field \"page\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("page"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("page")); err != nil {
+			return err
+		}
+
+		if t.Page == nil {
+			if _, err := cw.Write(cbg.CborNull); err != nil {
+				return err
+			}
+		} else {
+			if *t.Page >= 0 {
+				if err := cw.WriteMajorTypeHeader(cbg.MajUnsignedInt, uint64(*t.Page)); err != nil {
+					return err
+				}
+			} else {
+				if err := cw.WriteMajorTypeHeader(cbg.MajNegativeInt, uint64(-*t.Page-1)); err != nil {
+					return err
+				}
+			}
+		}
+
+	}
+
+	// t.Type (string) (string)
+	if len("type") > 1000000 {
+		return xerrors.Errorf("Value in field \"type\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("type"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("type")); err != nil {
+		return err
+	}
+
+	if len(t.Type) > 1000000 {
+		return xerrors.Errorf("Value in field t.Type was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(t.Type))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string(t.Type)); err != nil {
+		return err
+	}
+
+	// t.LexiconTypeID (string) (string)
+	if len("$type") > 1000000 {
+		return xerrors.Errorf("Value in field \"$type\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("$type"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("$type")); err != nil {
+		return err
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("app.foodios.feed.recipeRevision#publicationAttribution"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("app.foodios.feed.recipeRevision#publicationAttribution")); err != nil {
+		return err
+	}
+
+	// t.Notes (string) (string)
+	if t.Notes != nil {
+
+		if len("notes") > 1000000 {
+			return xerrors.Errorf("Value in field \"notes\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("notes"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("notes")); err != nil {
+			return err
+		}
+
+		if t.Notes == nil {
+			if _, err := cw.Write(cbg.CborNull); err != nil {
+				return err
+			}
+		} else {
+			if len(*t.Notes) > 1000000 {
+				return xerrors.Errorf("Value in field t.Notes was too long")
+			}
+
+			if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(*t.Notes))); err != nil {
+				return err
+			}
+			if _, err := cw.WriteString(string(*t.Notes)); err != nil {
+				return err
+			}
+		}
+	}
+
+	// t.Title (string) (string)
+	if len("title") > 1000000 {
+		return xerrors.Errorf("Value in field \"title\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("title"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("title")); err != nil {
+		return err
+	}
+
+	if len(t.Title) > 1000000 {
+		return xerrors.Errorf("Value in field t.Title was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(t.Title))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string(t.Title)); err != nil {
+		return err
+	}
+
+	// t.Author (string) (string)
+	if len("author") > 1000000 {
+		return xerrors.Errorf("Value in field \"author\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("author"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("author")); err != nil {
+		return err
+	}
+
+	if len(t.Author) > 1000000 {
+		return xerrors.Errorf("Value in field t.Author was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(t.Author))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string(t.Author)); err != nil {
+		return err
+	}
+
+	// t.Publisher (string) (string)
+	if t.Publisher != nil {
+
+		if len("publisher") > 1000000 {
+			return xerrors.Errorf("Value in field \"publisher\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("publisher"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("publisher")); err != nil {
+			return err
+		}
+
+		if t.Publisher == nil {
+			if _, err := cw.Write(cbg.CborNull); err != nil {
+				return err
+			}
+		} else {
+			if len(*t.Publisher) > 1000000 {
+				return xerrors.Errorf("Value in field t.Publisher was too long")
+			}
+
+			if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(*t.Publisher))); err != nil {
+				return err
+			}
+			if _, err := cw.WriteString(string(*t.Publisher)); err != nil {
+				return err
+			}
+		}
+	}
+
+	// t.PublicationType (foodios.FeedRecipeRevision_PublicationAttribution_PublicationType) (struct)
+	if len("publicationType") > 1000000 {
+		return xerrors.Errorf("Value in field \"publicationType\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("publicationType"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("publicationType")); err != nil {
+		return err
+	}
+
+	if err := t.PublicationType.MarshalCBOR(cw); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *FeedRecipeRevision_PublicationAttribution) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = FeedRecipeRevision_PublicationAttribution{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajMap {
+		return fmt.Errorf("cbor input should be of type map")
+	}
+
+	if extra > cbg.MaxLength {
+		return fmt.Errorf("FeedRecipeRevision_PublicationAttribution: map struct too large (%d)", extra)
+	}
+
+	n := extra
+
+	nameBuf := make([]byte, 15)
+	for i := uint64(0); i < n; i++ {
+		nameLen, ok, err := cbg.ReadFullStringIntoBuf(cr, nameBuf, 1000000)
+		if err != nil {
+			return err
+		}
+
+		if !ok {
+			// Field doesn't exist on this type, so ignore it
+			if err := cbg.ScanForLinks(cr, func(cid.Cid) {}); err != nil {
+				return err
+			}
+			continue
+		}
+
+		switch string(nameBuf[:nameLen]) {
+		// t.Url (string) (string)
+		case "url":
+
+			{
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+
+					sval, err := cbg.ReadStringWithMax(cr, 1000000)
+					if err != nil {
+						return err
+					}
+
+					t.Url = (*string)(&sval)
+				}
+			}
+			// t.Isbn (string) (string)
+		case "isbn":
+
+			{
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+
+					sval, err := cbg.ReadStringWithMax(cr, 1000000)
+					if err != nil {
+						return err
+					}
+
+					t.Isbn = (*string)(&sval)
+				}
+			}
+			// t.Page (int64) (int64)
+		case "page":
+			{
+
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+					maj, extra, err := cr.ReadHeader()
+					if err != nil {
+						return err
+					}
+					var extraI int64
+					switch maj {
+					case cbg.MajUnsignedInt:
+						extraI = int64(extra)
+						if extraI < 0 {
+							return fmt.Errorf("int64 positive overflow")
+						}
+					case cbg.MajNegativeInt:
+						extraI = int64(extra)
+						if extraI < 0 {
+							return fmt.Errorf("int64 negative overflow")
+						}
+						extraI = -1 - extraI
+					default:
+						return fmt.Errorf("wrong type for int64 field: %d", maj)
+					}
+
+					t.Page = (*int64)(&extraI)
+				}
+			}
+			// t.Type (string) (string)
+		case "type":
+
+			{
+				sval, err := cbg.ReadStringWithMax(cr, 1000000)
+				if err != nil {
+					return err
+				}
+
+				t.Type = string(sval)
+			}
+			// t.LexiconTypeID (string) (string)
+		case "$type":
+
+			{
+				sval, err := cbg.ReadStringWithMax(cr, 1000000)
+				if err != nil {
+					return err
+				}
+
+				t.LexiconTypeID = string(sval)
+			}
+			// t.Notes (string) (string)
+		case "notes":
+
+			{
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+
+					sval, err := cbg.ReadStringWithMax(cr, 1000000)
+					if err != nil {
+						return err
+					}
+
+					t.Notes = (*string)(&sval)
+				}
+			}
+			// t.Title (string) (string)
+		case "title":
+
+			{
+				sval, err := cbg.ReadStringWithMax(cr, 1000000)
+				if err != nil {
+					return err
+				}
+
+				t.Title = string(sval)
+			}
+			// t.Author (string) (string)
+		case "author":
+
+			{
+				sval, err := cbg.ReadStringWithMax(cr, 1000000)
+				if err != nil {
+					return err
+				}
+
+				t.Author = string(sval)
+			}
+			// t.Publisher (string) (string)
+		case "publisher":
+
+			{
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+
+					sval, err := cbg.ReadStringWithMax(cr, 1000000)
+					if err != nil {
+						return err
+					}
+
+					t.Publisher = (*string)(&sval)
+				}
+			}
+			// t.PublicationType (foodios.FeedRecipeRevision_PublicationAttribution_PublicationType) (struct)
+		case "publicationType":
+
+			{
+
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+					t.PublicationType = new(FeedRecipeRevision_PublicationAttribution_PublicationType)
+					if err := t.PublicationType.UnmarshalCBOR(cr); err != nil {
+						return xerrors.Errorf("unmarshaling t.PublicationType pointer: %w", err)
+					}
+				}
+
+			}
+
+		default:
+			// Field doesn't exist on this type, so ignore it
+			if err := cbg.ScanForLinks(r, func(cid.Cid) {}); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+func (t *FeedRecipeRevision_ProductAttribution) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+	fieldCount := 7
+
+	if t.Notes == nil {
+		fieldCount--
+	}
+
+	if t.Upc == nil {
+		fieldCount--
+	}
+
+	if t.Url == nil {
+		fieldCount--
+	}
+
+	if _, err := cw.Write(cbg.CborEncodeMajorType(cbg.MajMap, uint64(fieldCount))); err != nil {
+		return err
+	}
+
+	// t.Upc (string) (string)
+	if t.Upc != nil {
+
+		if len("upc") > 1000000 {
+			return xerrors.Errorf("Value in field \"upc\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("upc"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("upc")); err != nil {
+			return err
+		}
+
+		if t.Upc == nil {
+			if _, err := cw.Write(cbg.CborNull); err != nil {
+				return err
+			}
+		} else {
+			if len(*t.Upc) > 1000000 {
+				return xerrors.Errorf("Value in field t.Upc was too long")
+			}
+
+			if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(*t.Upc))); err != nil {
+				return err
+			}
+			if _, err := cw.WriteString(string(*t.Upc)); err != nil {
+				return err
+			}
+		}
+	}
+
+	// t.Url (string) (string)
+	if t.Url != nil {
+
+		if len("url") > 1000000 {
+			return xerrors.Errorf("Value in field \"url\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("url"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("url")); err != nil {
+			return err
+		}
+
+		if t.Url == nil {
+			if _, err := cw.Write(cbg.CborNull); err != nil {
+				return err
+			}
+		} else {
+			if len(*t.Url) > 1000000 {
+				return xerrors.Errorf("Value in field t.Url was too long")
+			}
+
+			if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(*t.Url))); err != nil {
+				return err
+			}
+			if _, err := cw.WriteString(string(*t.Url)); err != nil {
+				return err
+			}
+		}
+	}
+
+	// t.Name (string) (string)
+	if len("name") > 1000000 {
+		return xerrors.Errorf("Value in field \"name\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("name"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("name")); err != nil {
+		return err
+	}
+
+	if len(t.Name) > 1000000 {
+		return xerrors.Errorf("Value in field t.Name was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(t.Name))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string(t.Name)); err != nil {
+		return err
+	}
+
+	// t.Type (string) (string)
+	if len("type") > 1000000 {
+		return xerrors.Errorf("Value in field \"type\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("type"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("type")); err != nil {
+		return err
+	}
+
+	if len(t.Type) > 1000000 {
+		return xerrors.Errorf("Value in field t.Type was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(t.Type))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string(t.Type)); err != nil {
+		return err
+	}
+
+	// t.LexiconTypeID (string) (string)
+	if len("$type") > 1000000 {
+		return xerrors.Errorf("Value in field \"$type\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("$type"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("$type")); err != nil {
+		return err
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("app.foodios.feed.recipeRevision#productAttribution"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("app.foodios.feed.recipeRevision#productAttribution")); err != nil {
+		return err
+	}
+
+	// t.Brand (string) (string)
+	if len("brand") > 1000000 {
+		return xerrors.Errorf("Value in field \"brand\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("brand"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("brand")); err != nil {
+		return err
+	}
+
+	if len(t.Brand) > 1000000 {
+		return xerrors.Errorf("Value in field t.Brand was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(t.Brand))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string(t.Brand)); err != nil {
+		return err
+	}
+
+	// t.Notes (string) (string)
+	if t.Notes != nil {
+
+		if len("notes") > 1000000 {
+			return xerrors.Errorf("Value in field \"notes\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("notes"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("notes")); err != nil {
+			return err
+		}
+
+		if t.Notes == nil {
+			if _, err := cw.Write(cbg.CborNull); err != nil {
+				return err
+			}
+		} else {
+			if len(*t.Notes) > 1000000 {
+				return xerrors.Errorf("Value in field t.Notes was too long")
+			}
+
+			if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(*t.Notes))); err != nil {
+				return err
+			}
+			if _, err := cw.WriteString(string(*t.Notes)); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (t *FeedRecipeRevision_ProductAttribution) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = FeedRecipeRevision_ProductAttribution{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajMap {
+		return fmt.Errorf("cbor input should be of type map")
+	}
+
+	if extra > cbg.MaxLength {
+		return fmt.Errorf("FeedRecipeRevision_ProductAttribution: map struct too large (%d)", extra)
+	}
+
+	n := extra
+
+	nameBuf := make([]byte, 5)
+	for i := uint64(0); i < n; i++ {
+		nameLen, ok, err := cbg.ReadFullStringIntoBuf(cr, nameBuf, 1000000)
+		if err != nil {
+			return err
+		}
+
+		if !ok {
+			// Field doesn't exist on this type, so ignore it
+			if err := cbg.ScanForLinks(cr, func(cid.Cid) {}); err != nil {
+				return err
+			}
+			continue
+		}
+
+		switch string(nameBuf[:nameLen]) {
+		// t.Upc (string) (string)
+		case "upc":
+
+			{
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+
+					sval, err := cbg.ReadStringWithMax(cr, 1000000)
+					if err != nil {
+						return err
+					}
+
+					t.Upc = (*string)(&sval)
+				}
+			}
+			// t.Url (string) (string)
+		case "url":
+
+			{
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+
+					sval, err := cbg.ReadStringWithMax(cr, 1000000)
+					if err != nil {
+						return err
+					}
+
+					t.Url = (*string)(&sval)
+				}
+			}
+			// t.Name (string) (string)
+		case "name":
+
+			{
+				sval, err := cbg.ReadStringWithMax(cr, 1000000)
+				if err != nil {
+					return err
+				}
+
+				t.Name = string(sval)
+			}
+			// t.Type (string) (string)
+		case "type":
+
+			{
+				sval, err := cbg.ReadStringWithMax(cr, 1000000)
+				if err != nil {
+					return err
+				}
+
+				t.Type = string(sval)
+			}
+			// t.LexiconTypeID (string) (string)
+		case "$type":
+
+			{
+				sval, err := cbg.ReadStringWithMax(cr, 1000000)
+				if err != nil {
+					return err
+				}
+
+				t.LexiconTypeID = string(sval)
+			}
+			// t.Brand (string) (string)
+		case "brand":
+
+			{
+				sval, err := cbg.ReadStringWithMax(cr, 1000000)
+				if err != nil {
+					return err
+				}
+
+				t.Brand = string(sval)
+			}
+			// t.Notes (string) (string)
+		case "notes":
+
+			{
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+
+					sval, err := cbg.ReadStringWithMax(cr, 1000000)
+					if err != nil {
+						return err
+					}
+
+					t.Notes = (*string)(&sval)
+				}
+			}
+
+		default:
+			// Field doesn't exist on this type, so ignore it
+			if err := cbg.ScanForLinks(r, func(cid.Cid) {}); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+func (t *FeedRecipeRevision_PersonAttribution) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+	fieldCount := 5
+
+	if t.Notes == nil {
+		fieldCount--
+	}
+
+	if t.Url == nil {
+		fieldCount--
+	}
+
+	if _, err := cw.Write(cbg.CborEncodeMajorType(cbg.MajMap, uint64(fieldCount))); err != nil {
+		return err
+	}
+
+	// t.Url (string) (string)
+	if t.Url != nil {
+
+		if len("url") > 1000000 {
+			return xerrors.Errorf("Value in field \"url\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("url"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("url")); err != nil {
+			return err
+		}
+
+		if t.Url == nil {
+			if _, err := cw.Write(cbg.CborNull); err != nil {
+				return err
+			}
+		} else {
+			if len(*t.Url) > 1000000 {
+				return xerrors.Errorf("Value in field t.Url was too long")
+			}
+
+			if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(*t.Url))); err != nil {
+				return err
+			}
+			if _, err := cw.WriteString(string(*t.Url)); err != nil {
+				return err
+			}
+		}
+	}
+
+	// t.Name (string) (string)
+	if len("name") > 1000000 {
+		return xerrors.Errorf("Value in field \"name\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("name"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("name")); err != nil {
+		return err
+	}
+
+	if len(t.Name) > 1000000 {
+		return xerrors.Errorf("Value in field t.Name was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(t.Name))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string(t.Name)); err != nil {
+		return err
+	}
+
+	// t.Type (string) (string)
+	if len("type") > 1000000 {
+		return xerrors.Errorf("Value in field \"type\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("type"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("type")); err != nil {
+		return err
+	}
+
+	if len(t.Type) > 1000000 {
+		return xerrors.Errorf("Value in field t.Type was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(t.Type))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string(t.Type)); err != nil {
+		return err
+	}
+
+	// t.LexiconTypeID (string) (string)
+	if len("$type") > 1000000 {
+		return xerrors.Errorf("Value in field \"$type\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("$type"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("$type")); err != nil {
+		return err
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("app.foodios.feed.recipeRevision#personAttribution"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("app.foodios.feed.recipeRevision#personAttribution")); err != nil {
+		return err
+	}
+
+	// t.Notes (string) (string)
+	if t.Notes != nil {
+
+		if len("notes") > 1000000 {
+			return xerrors.Errorf("Value in field \"notes\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("notes"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("notes")); err != nil {
+			return err
+		}
+
+		if t.Notes == nil {
+			if _, err := cw.Write(cbg.CborNull); err != nil {
+				return err
+			}
+		} else {
+			if len(*t.Notes) > 1000000 {
+				return xerrors.Errorf("Value in field t.Notes was too long")
+			}
+
+			if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(*t.Notes))); err != nil {
+				return err
+			}
+			if _, err := cw.WriteString(string(*t.Notes)); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (t *FeedRecipeRevision_PersonAttribution) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = FeedRecipeRevision_PersonAttribution{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajMap {
+		return fmt.Errorf("cbor input should be of type map")
+	}
+
+	if extra > cbg.MaxLength {
+		return fmt.Errorf("FeedRecipeRevision_PersonAttribution: map struct too large (%d)", extra)
+	}
+
+	n := extra
+
+	nameBuf := make([]byte, 5)
+	for i := uint64(0); i < n; i++ {
+		nameLen, ok, err := cbg.ReadFullStringIntoBuf(cr, nameBuf, 1000000)
+		if err != nil {
+			return err
+		}
+
+		if !ok {
+			// Field doesn't exist on this type, so ignore it
+			if err := cbg.ScanForLinks(cr, func(cid.Cid) {}); err != nil {
+				return err
+			}
+			continue
+		}
+
+		switch string(nameBuf[:nameLen]) {
+		// t.Url (string) (string)
+		case "url":
+
+			{
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+
+					sval, err := cbg.ReadStringWithMax(cr, 1000000)
+					if err != nil {
+						return err
+					}
+
+					t.Url = (*string)(&sval)
+				}
+			}
+			// t.Name (string) (string)
+		case "name":
+
+			{
+				sval, err := cbg.ReadStringWithMax(cr, 1000000)
+				if err != nil {
+					return err
+				}
+
+				t.Name = string(sval)
+			}
+			// t.Type (string) (string)
+		case "type":
+
+			{
+				sval, err := cbg.ReadStringWithMax(cr, 1000000)
+				if err != nil {
+					return err
+				}
+
+				t.Type = string(sval)
+			}
+			// t.LexiconTypeID (string) (string)
+		case "$type":
+
+			{
+				sval, err := cbg.ReadStringWithMax(cr, 1000000)
+				if err != nil {
+					return err
+				}
+
+				t.LexiconTypeID = string(sval)
+			}
+			// t.Notes (string) (string)
+		case "notes":
+
+			{
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+
+					sval, err := cbg.ReadStringWithMax(cr, 1000000)
+					if err != nil {
+						return err
+					}
+
+					t.Notes = (*string)(&sval)
+				}
+			}
+
+		default:
+			// Field doesn't exist on this type, so ignore it
+			if err := cbg.ScanForLinks(r, func(cid.Cid) {}); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+func (t *FeedRecipeRevision_OriginalAttribution) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+	fieldCount := 4
+
+	if t.Url == nil {
+		fieldCount--
+	}
+
+	if _, err := cw.Write(cbg.CborEncodeMajorType(cbg.MajMap, uint64(fieldCount))); err != nil {
+		return err
+	}
+
+	// t.Url (string) (string)
+	if t.Url != nil {
+
+		if len("url") > 1000000 {
+			return xerrors.Errorf("Value in field \"url\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("url"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("url")); err != nil {
+			return err
+		}
+
+		if t.Url == nil {
+			if _, err := cw.Write(cbg.CborNull); err != nil {
+				return err
+			}
+		} else {
+			if len(*t.Url) > 1000000 {
+				return xerrors.Errorf("Value in field t.Url was too long")
+			}
+
+			if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(*t.Url))); err != nil {
+				return err
+			}
+			if _, err := cw.WriteString(string(*t.Url)); err != nil {
+				return err
+			}
+		}
+	}
+
+	// t.Type (string) (string)
+	if len("type") > 1000000 {
+		return xerrors.Errorf("Value in field \"type\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("type"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("type")); err != nil {
+		return err
+	}
+
+	if len(t.Type) > 1000000 {
+		return xerrors.Errorf("Value in field t.Type was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(t.Type))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string(t.Type)); err != nil {
+		return err
+	}
+
+	// t.LexiconTypeID (string) (string)
+	if len("$type") > 1000000 {
+		return xerrors.Errorf("Value in field \"$type\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("$type"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("$type")); err != nil {
+		return err
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("app.foodios.feed.recipeRevision#originalAttribution"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("app.foodios.feed.recipeRevision#originalAttribution")); err != nil {
+		return err
+	}
+
+	// t.License (foodios.FeedRecipeRevision_OriginalAttribution_License) (struct)
+	if len("license") > 1000000 {
+		return xerrors.Errorf("Value in field \"license\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("license"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("license")); err != nil {
+		return err
+	}
+
+	if err := t.License.MarshalCBOR(cw); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (t *FeedRecipeRevision_OriginalAttribution) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = FeedRecipeRevision_OriginalAttribution{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajMap {
+		return fmt.Errorf("cbor input should be of type map")
+	}
+
+	if extra > cbg.MaxLength {
+		return fmt.Errorf("FeedRecipeRevision_OriginalAttribution: map struct too large (%d)", extra)
+	}
+
+	n := extra
+
+	nameBuf := make([]byte, 7)
+	for i := uint64(0); i < n; i++ {
+		nameLen, ok, err := cbg.ReadFullStringIntoBuf(cr, nameBuf, 1000000)
+		if err != nil {
+			return err
+		}
+
+		if !ok {
+			// Field doesn't exist on this type, so ignore it
+			if err := cbg.ScanForLinks(cr, func(cid.Cid) {}); err != nil {
+				return err
+			}
+			continue
+		}
+
+		switch string(nameBuf[:nameLen]) {
+		// t.Url (string) (string)
+		case "url":
+
+			{
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+
+					sval, err := cbg.ReadStringWithMax(cr, 1000000)
+					if err != nil {
+						return err
+					}
+
+					t.Url = (*string)(&sval)
+				}
+			}
+			// t.Type (string) (string)
+		case "type":
+
+			{
+				sval, err := cbg.ReadStringWithMax(cr, 1000000)
+				if err != nil {
+					return err
+				}
+
+				t.Type = string(sval)
+			}
+			// t.LexiconTypeID (string) (string)
+		case "$type":
+
+			{
+				sval, err := cbg.ReadStringWithMax(cr, 1000000)
+				if err != nil {
+					return err
+				}
+
+				t.LexiconTypeID = string(sval)
+			}
+			// t.License (foodios.FeedRecipeRevision_OriginalAttribution_License) (struct)
+		case "license":
+
+			{
+
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+					t.License = new(FeedRecipeRevision_OriginalAttribution_License)
+					if err := t.License.UnmarshalCBOR(cr); err != nil {
+						return xerrors.Errorf("unmarshaling t.License pointer: %w", err)
+					}
+				}
+
+			}
+
+		default:
+			// Field doesn't exist on this type, so ignore it
+			if err := cbg.ScanForLinks(r, func(cid.Cid) {}); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+func (t *FeedDefs_LicenseAllRights) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+	fieldCount := 2
+
+	if t.LicenseType == nil {
+		fieldCount--
+	}
+
+	if _, err := cw.Write(cbg.CborEncodeMajorType(cbg.MajMap, uint64(fieldCount))); err != nil {
+		return err
+	}
+
+	// t.LexiconTypeID (string) (string)
+	if len("$type") > 1000000 {
+		return xerrors.Errorf("Value in field \"$type\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("$type"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("$type")); err != nil {
+		return err
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("app.foodios.feed.defs#licenseAllRights"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("app.foodios.feed.defs#licenseAllRights")); err != nil {
+		return err
+	}
+
+	// t.LicenseType (string) (string)
+	if t.LicenseType != nil {
+
+		if len("licenseType") > 1000000 {
+			return xerrors.Errorf("Value in field \"licenseType\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("licenseType"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("licenseType")); err != nil {
+			return err
+		}
+
+		if t.LicenseType == nil {
+			if _, err := cw.Write(cbg.CborNull); err != nil {
+				return err
+			}
+		} else {
+			if len(*t.LicenseType) > 1000000 {
+				return xerrors.Errorf("Value in field t.LicenseType was too long")
+			}
+
+			if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(*t.LicenseType))); err != nil {
+				return err
+			}
+			if _, err := cw.WriteString(string(*t.LicenseType)); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (t *FeedDefs_LicenseAllRights) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = FeedDefs_LicenseAllRights{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajMap {
+		return fmt.Errorf("cbor input should be of type map")
+	}
+
+	if extra > cbg.MaxLength {
+		return fmt.Errorf("FeedDefs_LicenseAllRights: map struct too large (%d)", extra)
+	}
+
+	n := extra
+
+	nameBuf := make([]byte, 11)
+	for i := uint64(0); i < n; i++ {
+		nameLen, ok, err := cbg.ReadFullStringIntoBuf(cr, nameBuf, 1000000)
+		if err != nil {
+			return err
+		}
+
+		if !ok {
+			// Field doesn't exist on this type, so ignore it
+			if err := cbg.ScanForLinks(cr, func(cid.Cid) {}); err != nil {
+				return err
+			}
+			continue
+		}
+
+		switch string(nameBuf[:nameLen]) {
+		// t.LexiconTypeID (string) (string)
+		case "$type":
+
+			{
+				sval, err := cbg.ReadStringWithMax(cr, 1000000)
+				if err != nil {
+					return err
+				}
+
+				t.LexiconTypeID = string(sval)
+			}
+			// t.LicenseType (string) (string)
+		case "licenseType":
+
+			{
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+
+					sval, err := cbg.ReadStringWithMax(cr, 1000000)
+					if err != nil {
+						return err
+					}
+
+					t.LicenseType = (*string)(&sval)
+				}
+			}
+
+		default:
+			// Field doesn't exist on this type, so ignore it
+			if err := cbg.ScanForLinks(r, func(cid.Cid) {}); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+func (t *FeedDefs_LicenseCreativeCommonsBy) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+	fieldCount := 2
+
+	if t.LicenseType == nil {
+		fieldCount--
+	}
+
+	if _, err := cw.Write(cbg.CborEncodeMajorType(cbg.MajMap, uint64(fieldCount))); err != nil {
+		return err
+	}
+
+	// t.LexiconTypeID (string) (string)
+	if len("$type") > 1000000 {
+		return xerrors.Errorf("Value in field \"$type\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("$type"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("$type")); err != nil {
+		return err
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("app.foodios.feed.defs#licenseCreativeCommonsBy"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("app.foodios.feed.defs#licenseCreativeCommonsBy")); err != nil {
+		return err
+	}
+
+	// t.LicenseType (string) (string)
+	if t.LicenseType != nil {
+
+		if len("licenseType") > 1000000 {
+			return xerrors.Errorf("Value in field \"licenseType\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("licenseType"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("licenseType")); err != nil {
+			return err
+		}
+
+		if t.LicenseType == nil {
+			if _, err := cw.Write(cbg.CborNull); err != nil {
+				return err
+			}
+		} else {
+			if len(*t.LicenseType) > 1000000 {
+				return xerrors.Errorf("Value in field t.LicenseType was too long")
+			}
+
+			if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(*t.LicenseType))); err != nil {
+				return err
+			}
+			if _, err := cw.WriteString(string(*t.LicenseType)); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (t *FeedDefs_LicenseCreativeCommonsBy) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = FeedDefs_LicenseCreativeCommonsBy{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajMap {
+		return fmt.Errorf("cbor input should be of type map")
+	}
+
+	if extra > cbg.MaxLength {
+		return fmt.Errorf("FeedDefs_LicenseCreativeCommonsBy: map struct too large (%d)", extra)
+	}
+
+	n := extra
+
+	nameBuf := make([]byte, 11)
+	for i := uint64(0); i < n; i++ {
+		nameLen, ok, err := cbg.ReadFullStringIntoBuf(cr, nameBuf, 1000000)
+		if err != nil {
+			return err
+		}
+
+		if !ok {
+			// Field doesn't exist on this type, so ignore it
+			if err := cbg.ScanForLinks(cr, func(cid.Cid) {}); err != nil {
+				return err
+			}
+			continue
+		}
+
+		switch string(nameBuf[:nameLen]) {
+		// t.LexiconTypeID (string) (string)
+		case "$type":
+
+			{
+				sval, err := cbg.ReadStringWithMax(cr, 1000000)
+				if err != nil {
+					return err
+				}
+
+				t.LexiconTypeID = string(sval)
+			}
+			// t.LicenseType (string) (string)
+		case "licenseType":
+
+			{
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+
+					sval, err := cbg.ReadStringWithMax(cr, 1000000)
+					if err != nil {
+						return err
+					}
+
+					t.LicenseType = (*string)(&sval)
+				}
+			}
+
+		default:
+			// Field doesn't exist on this type, so ignore it
+			if err := cbg.ScanForLinks(r, func(cid.Cid) {}); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+func (t *FeedDefs_LicenseCreativeCommonsByNc) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+	fieldCount := 2
+
+	if t.LicenseType == nil {
+		fieldCount--
+	}
+
+	if _, err := cw.Write(cbg.CborEncodeMajorType(cbg.MajMap, uint64(fieldCount))); err != nil {
+		return err
+	}
+
+	// t.LexiconTypeID (string) (string)
+	if len("$type") > 1000000 {
+		return xerrors.Errorf("Value in field \"$type\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("$type"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("$type")); err != nil {
+		return err
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("app.foodios.feed.defs#licenseCreativeCommonsByNc"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("app.foodios.feed.defs#licenseCreativeCommonsByNc")); err != nil {
+		return err
+	}
+
+	// t.LicenseType (string) (string)
+	if t.LicenseType != nil {
+
+		if len("licenseType") > 1000000 {
+			return xerrors.Errorf("Value in field \"licenseType\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("licenseType"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("licenseType")); err != nil {
+			return err
+		}
+
+		if t.LicenseType == nil {
+			if _, err := cw.Write(cbg.CborNull); err != nil {
+				return err
+			}
+		} else {
+			if len(*t.LicenseType) > 1000000 {
+				return xerrors.Errorf("Value in field t.LicenseType was too long")
+			}
+
+			if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(*t.LicenseType))); err != nil {
+				return err
+			}
+			if _, err := cw.WriteString(string(*t.LicenseType)); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (t *FeedDefs_LicenseCreativeCommonsByNc) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = FeedDefs_LicenseCreativeCommonsByNc{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajMap {
+		return fmt.Errorf("cbor input should be of type map")
+	}
+
+	if extra > cbg.MaxLength {
+		return fmt.Errorf("FeedDefs_LicenseCreativeCommonsByNc: map struct too large (%d)", extra)
+	}
+
+	n := extra
+
+	nameBuf := make([]byte, 11)
+	for i := uint64(0); i < n; i++ {
+		nameLen, ok, err := cbg.ReadFullStringIntoBuf(cr, nameBuf, 1000000)
+		if err != nil {
+			return err
+		}
+
+		if !ok {
+			// Field doesn't exist on this type, so ignore it
+			if err := cbg.ScanForLinks(cr, func(cid.Cid) {}); err != nil {
+				return err
+			}
+			continue
+		}
+
+		switch string(nameBuf[:nameLen]) {
+		// t.LexiconTypeID (string) (string)
+		case "$type":
+
+			{
+				sval, err := cbg.ReadStringWithMax(cr, 1000000)
+				if err != nil {
+					return err
+				}
+
+				t.LexiconTypeID = string(sval)
+			}
+			// t.LicenseType (string) (string)
+		case "licenseType":
+
+			{
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+
+					sval, err := cbg.ReadStringWithMax(cr, 1000000)
+					if err != nil {
+						return err
+					}
+
+					t.LicenseType = (*string)(&sval)
+				}
+			}
+
+		default:
+			// Field doesn't exist on this type, so ignore it
+			if err := cbg.ScanForLinks(r, func(cid.Cid) {}); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+func (t *FeedDefs_LicenseCreativeCommonsByNcSa) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+	fieldCount := 2
+
+	if t.LicenseType == nil {
+		fieldCount--
+	}
+
+	if _, err := cw.Write(cbg.CborEncodeMajorType(cbg.MajMap, uint64(fieldCount))); err != nil {
+		return err
+	}
+
+	// t.LexiconTypeID (string) (string)
+	if len("$type") > 1000000 {
+		return xerrors.Errorf("Value in field \"$type\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("$type"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("$type")); err != nil {
+		return err
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("app.foodios.feed.defs#licenseCreativeCommonsByNcSa"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("app.foodios.feed.defs#licenseCreativeCommonsByNcSa")); err != nil {
+		return err
+	}
+
+	// t.LicenseType (string) (string)
+	if t.LicenseType != nil {
+
+		if len("licenseType") > 1000000 {
+			return xerrors.Errorf("Value in field \"licenseType\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("licenseType"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("licenseType")); err != nil {
+			return err
+		}
+
+		if t.LicenseType == nil {
+			if _, err := cw.Write(cbg.CborNull); err != nil {
+				return err
+			}
+		} else {
+			if len(*t.LicenseType) > 1000000 {
+				return xerrors.Errorf("Value in field t.LicenseType was too long")
+			}
+
+			if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(*t.LicenseType))); err != nil {
+				return err
+			}
+			if _, err := cw.WriteString(string(*t.LicenseType)); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (t *FeedDefs_LicenseCreativeCommonsByNcSa) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = FeedDefs_LicenseCreativeCommonsByNcSa{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajMap {
+		return fmt.Errorf("cbor input should be of type map")
+	}
+
+	if extra > cbg.MaxLength {
+		return fmt.Errorf("FeedDefs_LicenseCreativeCommonsByNcSa: map struct too large (%d)", extra)
+	}
+
+	n := extra
+
+	nameBuf := make([]byte, 11)
+	for i := uint64(0); i < n; i++ {
+		nameLen, ok, err := cbg.ReadFullStringIntoBuf(cr, nameBuf, 1000000)
+		if err != nil {
+			return err
+		}
+
+		if !ok {
+			// Field doesn't exist on this type, so ignore it
+			if err := cbg.ScanForLinks(cr, func(cid.Cid) {}); err != nil {
+				return err
+			}
+			continue
+		}
+
+		switch string(nameBuf[:nameLen]) {
+		// t.LexiconTypeID (string) (string)
+		case "$type":
+
+			{
+				sval, err := cbg.ReadStringWithMax(cr, 1000000)
+				if err != nil {
+					return err
+				}
+
+				t.LexiconTypeID = string(sval)
+			}
+			// t.LicenseType (string) (string)
+		case "licenseType":
+
+			{
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+
+					sval, err := cbg.ReadStringWithMax(cr, 1000000)
+					if err != nil {
+						return err
+					}
+
+					t.LicenseType = (*string)(&sval)
+				}
+			}
+
+		default:
+			// Field doesn't exist on this type, so ignore it
+			if err := cbg.ScanForLinks(r, func(cid.Cid) {}); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+func (t *FeedDefs_LicenseCreativeCommonsBySa) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+	fieldCount := 2
+
+	if t.LicenseType == nil {
+		fieldCount--
+	}
+
+	if _, err := cw.Write(cbg.CborEncodeMajorType(cbg.MajMap, uint64(fieldCount))); err != nil {
+		return err
+	}
+
+	// t.LexiconTypeID (string) (string)
+	if len("$type") > 1000000 {
+		return xerrors.Errorf("Value in field \"$type\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("$type"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("$type")); err != nil {
+		return err
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("app.foodios.feed.defs#licenseCreativeCommonsBySa"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("app.foodios.feed.defs#licenseCreativeCommonsBySa")); err != nil {
+		return err
+	}
+
+	// t.LicenseType (string) (string)
+	if t.LicenseType != nil {
+
+		if len("licenseType") > 1000000 {
+			return xerrors.Errorf("Value in field \"licenseType\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("licenseType"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("licenseType")); err != nil {
+			return err
+		}
+
+		if t.LicenseType == nil {
+			if _, err := cw.Write(cbg.CborNull); err != nil {
+				return err
+			}
+		} else {
+			if len(*t.LicenseType) > 1000000 {
+				return xerrors.Errorf("Value in field t.LicenseType was too long")
+			}
+
+			if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(*t.LicenseType))); err != nil {
+				return err
+			}
+			if _, err := cw.WriteString(string(*t.LicenseType)); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (t *FeedDefs_LicenseCreativeCommonsBySa) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = FeedDefs_LicenseCreativeCommonsBySa{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajMap {
+		return fmt.Errorf("cbor input should be of type map")
+	}
+
+	if extra > cbg.MaxLength {
+		return fmt.Errorf("FeedDefs_LicenseCreativeCommonsBySa: map struct too large (%d)", extra)
+	}
+
+	n := extra
+
+	nameBuf := make([]byte, 11)
+	for i := uint64(0); i < n; i++ {
+		nameLen, ok, err := cbg.ReadFullStringIntoBuf(cr, nameBuf, 1000000)
+		if err != nil {
+			return err
+		}
+
+		if !ok {
+			// Field doesn't exist on this type, so ignore it
+			if err := cbg.ScanForLinks(cr, func(cid.Cid) {}); err != nil {
+				return err
+			}
+			continue
+		}
+
+		switch string(nameBuf[:nameLen]) {
+		// t.LexiconTypeID (string) (string)
+		case "$type":
+
+			{
+				sval, err := cbg.ReadStringWithMax(cr, 1000000)
+				if err != nil {
+					return err
+				}
+
+				t.LexiconTypeID = string(sval)
+			}
+			// t.LicenseType (string) (string)
+		case "licenseType":
+
+			{
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+
+					sval, err := cbg.ReadStringWithMax(cr, 1000000)
+					if err != nil {
+						return err
+					}
+
+					t.LicenseType = (*string)(&sval)
+				}
+			}
+
+		default:
+			// Field doesn't exist on this type, so ignore it
+			if err := cbg.ScanForLinks(r, func(cid.Cid) {}); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+func (t *FeedDefs_LicensePublicDomain) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+	fieldCount := 2
+
+	if t.LicenseType == nil {
+		fieldCount--
+	}
+
+	if _, err := cw.Write(cbg.CborEncodeMajorType(cbg.MajMap, uint64(fieldCount))); err != nil {
+		return err
+	}
+
+	// t.LexiconTypeID (string) (string)
+	if len("$type") > 1000000 {
+		return xerrors.Errorf("Value in field \"$type\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("$type"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("$type")); err != nil {
+		return err
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("app.foodios.feed.defs#licensePublicDomain"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("app.foodios.feed.defs#licensePublicDomain")); err != nil {
+		return err
+	}
+
+	// t.LicenseType (string) (string)
+	if t.LicenseType != nil {
+
+		if len("licenseType") > 1000000 {
+			return xerrors.Errorf("Value in field \"licenseType\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("licenseType"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("licenseType")); err != nil {
+			return err
+		}
+
+		if t.LicenseType == nil {
+			if _, err := cw.Write(cbg.CborNull); err != nil {
+				return err
+			}
+		} else {
+			if len(*t.LicenseType) > 1000000 {
+				return xerrors.Errorf("Value in field t.LicenseType was too long")
+			}
+
+			if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(*t.LicenseType))); err != nil {
+				return err
+			}
+			if _, err := cw.WriteString(string(*t.LicenseType)); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (t *FeedDefs_LicensePublicDomain) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = FeedDefs_LicensePublicDomain{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajMap {
+		return fmt.Errorf("cbor input should be of type map")
+	}
+
+	if extra > cbg.MaxLength {
+		return fmt.Errorf("FeedDefs_LicensePublicDomain: map struct too large (%d)", extra)
+	}
+
+	n := extra
+
+	nameBuf := make([]byte, 11)
+	for i := uint64(0); i < n; i++ {
+		nameLen, ok, err := cbg.ReadFullStringIntoBuf(cr, nameBuf, 1000000)
+		if err != nil {
+			return err
+		}
+
+		if !ok {
+			// Field doesn't exist on this type, so ignore it
+			if err := cbg.ScanForLinks(cr, func(cid.Cid) {}); err != nil {
+				return err
+			}
+			continue
+		}
+
+		switch string(nameBuf[:nameLen]) {
+		// t.LexiconTypeID (string) (string)
+		case "$type":
+
+			{
+				sval, err := cbg.ReadStringWithMax(cr, 1000000)
+				if err != nil {
+					return err
+				}
+
+				t.LexiconTypeID = string(sval)
+			}
+			// t.LicenseType (string) (string)
+		case "licenseType":
+
+			{
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+
+					sval, err := cbg.ReadStringWithMax(cr, 1000000)
+					if err != nil {
+						return err
+					}
+
+					t.LicenseType = (*string)(&sval)
+				}
+			}
+
+		default:
+			// Field doesn't exist on this type, so ignore it
+			if err := cbg.ScanForLinks(r, func(cid.Cid) {}); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+func (t *FeedDefs_PublicationTypeBook) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+	fieldCount := 2
+
+	if t.PublicationType == nil {
+		fieldCount--
+	}
+
+	if _, err := cw.Write(cbg.CborEncodeMajorType(cbg.MajMap, uint64(fieldCount))); err != nil {
+		return err
+	}
+
+	// t.LexiconTypeID (string) (string)
+	if len("$type") > 1000000 {
+		return xerrors.Errorf("Value in field \"$type\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("$type"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("$type")); err != nil {
+		return err
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("app.foodios.feed.defs#publicationTypeBook"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("app.foodios.feed.defs#publicationTypeBook")); err != nil {
+		return err
+	}
+
+	// t.PublicationType (string) (string)
+	if t.PublicationType != nil {
+
+		if len("publicationType") > 1000000 {
+			return xerrors.Errorf("Value in field \"publicationType\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("publicationType"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("publicationType")); err != nil {
+			return err
+		}
+
+		if t.PublicationType == nil {
+			if _, err := cw.Write(cbg.CborNull); err != nil {
+				return err
+			}
+		} else {
+			if len(*t.PublicationType) > 1000000 {
+				return xerrors.Errorf("Value in field t.PublicationType was too long")
+			}
+
+			if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(*t.PublicationType))); err != nil {
+				return err
+			}
+			if _, err := cw.WriteString(string(*t.PublicationType)); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (t *FeedDefs_PublicationTypeBook) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = FeedDefs_PublicationTypeBook{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajMap {
+		return fmt.Errorf("cbor input should be of type map")
+	}
+
+	if extra > cbg.MaxLength {
+		return fmt.Errorf("FeedDefs_PublicationTypeBook: map struct too large (%d)", extra)
+	}
+
+	n := extra
+
+	nameBuf := make([]byte, 15)
+	for i := uint64(0); i < n; i++ {
+		nameLen, ok, err := cbg.ReadFullStringIntoBuf(cr, nameBuf, 1000000)
+		if err != nil {
+			return err
+		}
+
+		if !ok {
+			// Field doesn't exist on this type, so ignore it
+			if err := cbg.ScanForLinks(cr, func(cid.Cid) {}); err != nil {
+				return err
+			}
+			continue
+		}
+
+		switch string(nameBuf[:nameLen]) {
+		// t.LexiconTypeID (string) (string)
+		case "$type":
+
+			{
+				sval, err := cbg.ReadStringWithMax(cr, 1000000)
+				if err != nil {
+					return err
+				}
+
+				t.LexiconTypeID = string(sval)
+			}
+			// t.PublicationType (string) (string)
+		case "publicationType":
+
+			{
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+
+					sval, err := cbg.ReadStringWithMax(cr, 1000000)
+					if err != nil {
+						return err
+					}
+
+					t.PublicationType = (*string)(&sval)
+				}
+			}
+
+		default:
+			// Field doesn't exist on this type, so ignore it
+			if err := cbg.ScanForLinks(r, func(cid.Cid) {}); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+func (t *FeedDefs_PublicationTypeMagazine) MarshalCBOR(w io.Writer) error {
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+
+	cw := cbg.NewCborWriter(w)
+	fieldCount := 2
+
+	if t.PublicationType == nil {
+		fieldCount--
+	}
+
+	if _, err := cw.Write(cbg.CborEncodeMajorType(cbg.MajMap, uint64(fieldCount))); err != nil {
+		return err
+	}
+
+	// t.LexiconTypeID (string) (string)
+	if len("$type") > 1000000 {
+		return xerrors.Errorf("Value in field \"$type\" was too long")
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("$type"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("$type")); err != nil {
+		return err
+	}
+
+	if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("app.foodios.feed.defs#publicationTypeMagazine"))); err != nil {
+		return err
+	}
+	if _, err := cw.WriteString(string("app.foodios.feed.defs#publicationTypeMagazine")); err != nil {
+		return err
+	}
+
+	// t.PublicationType (string) (string)
+	if t.PublicationType != nil {
+
+		if len("publicationType") > 1000000 {
+			return xerrors.Errorf("Value in field \"publicationType\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("publicationType"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("publicationType")); err != nil {
+			return err
+		}
+
+		if t.PublicationType == nil {
+			if _, err := cw.Write(cbg.CborNull); err != nil {
+				return err
+			}
+		} else {
+			if len(*t.PublicationType) > 1000000 {
+				return xerrors.Errorf("Value in field t.PublicationType was too long")
+			}
+
+			if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(*t.PublicationType))); err != nil {
+				return err
+			}
+			if _, err := cw.WriteString(string(*t.PublicationType)); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (t *FeedDefs_PublicationTypeMagazine) UnmarshalCBOR(r io.Reader) (err error) {
+	*t = FeedDefs_PublicationTypeMagazine{}
+
+	cr := cbg.NewCborReader(r)
+
+	maj, extra, err := cr.ReadHeader()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
+	}()
+
+	if maj != cbg.MajMap {
+		return fmt.Errorf("cbor input should be of type map")
+	}
+
+	if extra > cbg.MaxLength {
+		return fmt.Errorf("FeedDefs_PublicationTypeMagazine: map struct too large (%d)", extra)
+	}
+
+	n := extra
+
+	nameBuf := make([]byte, 15)
+	for i := uint64(0); i < n; i++ {
+		nameLen, ok, err := cbg.ReadFullStringIntoBuf(cr, nameBuf, 1000000)
+		if err != nil {
+			return err
+		}
+
+		if !ok {
+			// Field doesn't exist on this type, so ignore it
+			if err := cbg.ScanForLinks(cr, func(cid.Cid) {}); err != nil {
+				return err
+			}
+			continue
+		}
+
+		switch string(nameBuf[:nameLen]) {
+		// t.LexiconTypeID (string) (string)
+		case "$type":
+
+			{
+				sval, err := cbg.ReadStringWithMax(cr, 1000000)
+				if err != nil {
+					return err
+				}
+
+				t.LexiconTypeID = string(sval)
+			}
+			// t.PublicationType (string) (string)
+		case "publicationType":
+
+			{
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+
+					sval, err := cbg.ReadStringWithMax(cr, 1000000)
+					if err != nil {
+						return err
+					}
+
+					t.PublicationType = (*string)(&sval)
+				}
 			}
 
 		default:
