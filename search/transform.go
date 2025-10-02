@@ -63,14 +63,14 @@ type RecipeRevisionDoc struct {
 	Collection         string    `json:"collection"`
 	CreatedAt          *string `json:"created_at"`
 	RecipePostURI      string    `json:"recipe_post_uri"`
-	Title              string    `json:"title"`
-	TitleJa            string    `json:"title_ja,omitempty"`
+	Name              string    `json:"name"`
+	NameJa            string    `json:"name_ja,omitempty"`
 	Text               string    `json:"text"`
 	TextJa             string    `json:"text_ja,omitempty"`
 	IngredientName     []string  `json:"ingredient_name"`
 	IngredientNameJa   []string  `json:"ingredient_name_ja,omitempty"`
-	StepText           []string  `json:"step_text"`
-	StepTextJa         []string  `json:"step_text_ja,omitempty"`
+	InstructionText    []string  `json:"instruction_text"`
+	InstructionTextJa         []string  `json:"instruction_text_ja,omitempty"`
 	LangCode           string    `json:"lang_code,omitempty"`
 	LangCodeIso2       string    `json:"lang_code_iso2,omitempty"`
 	EmbedAturi         []string  `json:"embed_aturi,omitempty"`
@@ -145,9 +145,11 @@ func TransformRecipe(post *foodios.FeedRecipeRevision, did syntax.DID, rkey, cid
 		ingredients = append(ingredients, ingredient.Name)
 	}
 
-	var steps = make([]string, len(post.Steps))
-	for _, step := range post.Steps {
-		steps = append(steps, step.Text)
+	var instructions = make([]string, 0, 20)
+	for _, section := range post.Instructions {
+		for _, instruction := range section.Instructions {
+			instructions = append(instructions, instruction.Text)
+		}
 	}
 
 	doc := RecipeRevisionDoc{
@@ -156,11 +158,10 @@ func TransformRecipe(post *foodios.FeedRecipeRevision, did syntax.DID, rkey, cid
 		RecipePostURI:     post.RecipePostRef.Uri,	
 		RecordRkey:        rkey,
 		RecordCID:         cid,
-		
-		Title: post.Title,
+		Name: post.Name,
 		Text: post.Text,
 		IngredientName: ingredients,
-		StepText: steps,
+		InstructionText: instructions,
 	}
 
 	if post.CreatedAt != "" {

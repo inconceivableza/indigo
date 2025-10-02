@@ -111,13 +111,13 @@
                 "normalizer": "default",
                 "doc_values": false
             },
-            "title": {
+            "name": {
                 "type": "text",
                 "analyzer": "textIcu",
                 "search_analyzer": "textIcuSearch",
                 "copy_to": "everything"
             },
-            "title_ja": {
+            "name_ja": {
                 "type": "text",
                 "analyzer": "textJapanese",
                 "search_analyzer": "textJapaneseSearch",
@@ -147,13 +147,13 @@
                 "search_analyzer": "textJapaneseSearch",
                 "copy_to": "everything_ja"
             },
-            "step_text": {
+            "instruction_text": {
                 "type": "text",
                 "analyzer": "textIcu",
                 "search_analyzer": "textIcuSearch",
                 "copy_to": "everything"
             },
-            "step_text_ja": {
+            "instruction_text_ja": {
                 "type": "text",
                 "analyzer": "textJapanese",
                 "search_analyzer": "textJapaneseSearch",
