@@ -146,7 +146,8 @@ func TransformRecipe(post *foodios.FeedRecipeRevision, did syntax.DID, rkey, cid
 	}
 
 	var instructions = make([]string, 0, 20)
-	for _, section := range post.Instructions {
+	
+	for _, section := range post.InstructionSections {
 		for _, instruction := range section.Instructions {
 			instructions = append(instructions, instruction.Text)
 		}
