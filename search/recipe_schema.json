@@ -63,6 +63,9 @@
                             "kuromoji_stemmer",
                             "lowercase"
                         ]
+                    },
+                    "path_analyzer": {
+                        "tokenizer": "path_hierarchy"
                     }
                 },
                 "normalizer": {
@@ -158,6 +161,18 @@
                 "analyzer": "textJapanese",
                 "search_analyzer": "textJapaneseSearch",
                 "copy_to": "everything_ja"
+            },
+            "recipeCategories": {
+                "type": "text",
+                "analyzer": "path_analyzer"
+            },
+            "recipeDiets": {
+                "type": "text",
+                "analyzer": "path_analyzer"
+            },
+            "recipeCuisines": {
+                "type": "text",
+                "analyzer": "path_analyzer"
             },
             "lang_code": {
                 "type": "keyword",

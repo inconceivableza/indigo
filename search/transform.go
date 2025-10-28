@@ -81,6 +81,9 @@ type RecipeRevisionDoc struct {
 	Url                []string  `json:"url,omitempty"`
 	Domain             []string  `json:"domain,omitempty"`
 	Tag                []string  `json:"tag,omitempty"`
+	Categories		   []string  `json:"recipeCategories,omitempty"`
+	Cuisines		   []string  `json:"recipeCuisines,omitempty"`
+	Diets			   []string  `json:"recipeDiets,omitempty"`
 }
 
 // Returns the search index document ID (`_id`) for this document.
@@ -163,6 +166,9 @@ func TransformRecipe(post *foodios.FeedRecipeRevision, did syntax.DID, rkey, cid
 		Text: post.Text,
 		IngredientName: ingredients,
 		InstructionText: instructions,
+		Categories: post.RecipeCategory,
+		Cuisines: post.RecipeCuisine,
+		Diets: post.SuitableForDiet,
 	}
 
 	if post.CreatedAt != "" {
