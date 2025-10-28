@@ -18,6 +18,8 @@ import (
 	"github.com/bluesky-social/indigo/util/labels"
 
 	cbg "github.com/whyrusleeping/cbor-gen"
+
+	foodios "github.com/bluesky-social/indigo/api/foodios"
 )
 
 func main() {
@@ -43,6 +45,33 @@ func main() {
 	}
 
 	if err := genCfg.WriteMapEncodersToFile("util/labels/cbor_gen.go", "labels", labels.UnsignedLabel{}); err != nil {
+		panic(err)
+	}
+	
+	if err := genCfg.WriteMapEncodersToFile("api/foodios/cbor_gen.go", "foodios", 
+		foodios.FeedRecipePost{},
+		foodios.FeedRecipeRevision{},
+		foodios.FeedRecipeRevision_Ingredient{},
+		foodios.FeedRecipeRevision_Instruction{},
+		foodios.FeedRecipeRevision_QuantityAndUnit{},
+		foodios.FeedRecipeRevision_InstructionSection{},
+		foodios.FeedRecipeRevision_Nutrition{},
+		foodios.FeedRecipeRevision_WebsiteAttribution{},
+		foodios.FeedRecipeRevision_ShowAttribution{},
+		foodios.FeedRecipeRevision_PublicationAttribution{},
+		foodios.FeedRecipeRevision_ProductAttribution{},
+		foodios.FeedRecipeRevision_PersonAttribution{},
+		foodios.FeedRecipeRevision_OriginalAttribution{},
+		foodios.FeedDefs_LicenseAllRights{},
+		foodios.FeedDefs_LicenseCreativeCommonsBy{},
+		foodios.FeedDefs_LicenseCreativeCommonsByNc{},
+		foodios.FeedDefs_LicenseCreativeCommonsByNcSa{},
+		foodios.FeedDefs_LicenseCreativeCommonsBySa{},
+		foodios.FeedDefs_LicensePublicDomain{},
+		foodios.FeedDefs_PublicationTypeBook{},
+		foodios.FeedDefs_PublicationTypeMagazine{},
+		); 
+		err != nil {
 		panic(err)
 	}
 

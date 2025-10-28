@@ -88,6 +88,12 @@ func run(args []string) error {
 			EnvVars: []string{"ES_PROFILE_INDEX"},
 		},
 		&cli.StringFlag{
+			Name:    "es-recipe-index",
+			Usage:   "ES index for 'recipe' documents",
+			Value:   "palomar_recipe",
+			EnvVars: []string{"ES_RECIPE_INDEX"},
+		},
+		&cli.StringFlag{
 			Name:    "atp-relay-host",
 			Usage:   "hostname and port of Relay to subscribe to",
 			Value:   "wss://bsky.network",
@@ -268,13 +274,13 @@ var runCmd = &cli.Command{
 			Logger:       logger,
 			ProfileIndex: cctx.String("es-profile-index"),
 			PostIndex:    cctx.String("es-post-index"),
+			RecipeIndex:  cctx.String("es-recipe-index"),
 		}
 
 		srv, err := search.NewServer(escli, &dir, apiConfig)
 		if err != nil {
 			return err
 		}
-
 		// Configure the indexer if we're not in readonly mode
 		if !readonly {
 			db, err := cliutil.SetupDatabase(cctx.String("database-url"), cctx.Int("max-metadb-connections"))
@@ -286,6 +292,7 @@ var runCmd = &cli.Command{
 				RelayHost:           cctx.String("atp-relay-host"),
 				ProfileIndex:        cctx.String("es-profile-index"),
 				PostIndex:           cctx.String("es-post-index"),
+				RecipeIndex:		 cctx.String("es-recipe-index"),
 				Logger:              logger,
 				RelaySyncRateLimit:  cctx.Int("relay-sync-rate-limit"),
 				IndexMaxConcurrency: cctx.Int("index-max-concurrency"),
@@ -368,7 +375,11 @@ var elasticCheckCmd = &cli.Command{
 		}
 		slog.Info("opensearch client connected", "client_info", inf)
 
-		resp, err := escli.Indices.Exists([]string{cctx.String("es-profile-index"), cctx.String("es-post-index")})
+		resp, err := escli.Indices.Exists([]string{
+			cctx.String("es-profile-index"), 
+			cctx.String("es-post-index"),
+			cctx.String("es-recipe-index"),
+		})
 		if err != nil {
 			return fmt.Errorf("failed to check index existence: %w", err)
 		}
@@ -404,7 +415,7 @@ var searchPostCmd = &cli.Command{
 			context.Background(),
 			identity.DefaultDirectory(), // TODO: parse PLC arg
 			escli,
-			cctx.String("es-post-index"),
+			search.QueryIndices{RecipeIndex: cctx.String("es-recipe-index"), PostIndex: cctx.String("es-post-index")},
 			&search.PostSearchParams{
 				Query:  strings.Join(cctx.Args().Slice(), " "),
 				Offset: 0,

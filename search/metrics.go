@@ -22,6 +22,11 @@ var postsIndexed = promauto.NewCounter(prometheus.CounterOpts{
 	Help: "Number of posts indexed",
 })
 
+var recipesIndexed = promauto.NewCounter(prometheus.CounterOpts{
+	Name: "search_recipes_indexed",
+	Help: "Number of recipes indexed",
+})
+
 var postsFailed = promauto.NewCounter(prometheus.CounterOpts{
 	Name: "search_posts_failed",
 	Help: "Number of posts that failed indexing",

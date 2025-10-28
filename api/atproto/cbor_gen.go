@@ -171,9 +171,13 @@ func (t *RepoStrongRef) MarshalCBOR(w io.Writer) error {
 	}
 
 	cw := cbg.NewCborWriter(w)
-	fieldCount := 3
+	fieldCount := 4
 
 	if t.LexiconTypeID == "" {
+		fieldCount--
+	}
+
+	if t.RevisionUri == nil {
 		fieldCount--
 	}
 
@@ -248,6 +252,38 @@ func (t *RepoStrongRef) MarshalCBOR(w io.Writer) error {
 			return err
 		}
 	}
+
+	// t.RevisionUri (string) (string)
+	if t.RevisionUri != nil {
+
+		if len("revisionUri") > 1000000 {
+			return xerrors.Errorf("Value in field \"revisionUri\" was too long")
+		}
+
+		if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len("revisionUri"))); err != nil {
+			return err
+		}
+		if _, err := cw.WriteString(string("revisionUri")); err != nil {
+			return err
+		}
+
+		if t.RevisionUri == nil {
+			if _, err := cw.Write(cbg.CborNull); err != nil {
+				return err
+			}
+		} else {
+			if len(*t.RevisionUri) > 1000000 {
+				return xerrors.Errorf("Value in field t.RevisionUri was too long")
+			}
+
+			if err := cw.WriteMajorTypeHeader(cbg.MajTextString, uint64(len(*t.RevisionUri))); err != nil {
+				return err
+			}
+			if _, err := cw.WriteString(string(*t.RevisionUri)); err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }
 
@@ -276,7 +312,7 @@ func (t *RepoStrongRef) UnmarshalCBOR(r io.Reader) (err error) {
 
 	n := extra
 
-	nameBuf := make([]byte, 5)
+	nameBuf := make([]byte, 11)
 	for i := uint64(0); i < n; i++ {
 		nameLen, ok, err := cbg.ReadFullStringIntoBuf(cr, nameBuf, 1000000)
 		if err != nil {
@@ -324,6 +360,27 @@ func (t *RepoStrongRef) UnmarshalCBOR(r io.Reader) (err error) {
 				}
 
 				t.LexiconTypeID = string(sval)
+			}
+			// t.RevisionUri (string) (string)
+		case "revisionUri":
+
+			{
+				b, err := cr.ReadByte()
+				if err != nil {
+					return err
+				}
+				if b != cbg.CborNull[0] {
+					if err := cr.UnreadByte(); err != nil {
+						return err
+					}
+
+					sval, err := cbg.ReadStringWithMax(cr, 1000000)
+					if err != nil {
+						return err
+					}
+
+					t.RevisionUri = (*string)(&sval)
+				}
 			}
 
 		default:

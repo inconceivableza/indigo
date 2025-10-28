@@ -31,6 +31,7 @@ type ServerConfig struct {
 	Logger            *slog.Logger
 	ProfileIndex      string
 	PostIndex         string
+	RecipeIndex       string
 	AtlantisAddresses []string
 }
 
@@ -38,6 +39,7 @@ type Server struct {
 	escli        *es.Client
 	postIndex    string
 	profileIndex string
+	recipeIndex  string
 	dir          identity.Directory
 	echo         *echo.Echo
 	logger       *slog.Logger
@@ -57,6 +59,7 @@ func NewServer(escli *es.Client, dir identity.Directory, config ServerConfig) (*
 		escli:        escli,
 		postIndex:    config.PostIndex,
 		profileIndex: config.ProfileIndex,
+		recipeIndex:  config.RecipeIndex,
 		dir:          dir,
 		logger:       logger,
 	}
