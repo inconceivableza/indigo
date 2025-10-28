@@ -64,6 +64,10 @@ type PostSearchParams struct {
 	Viewer   *syntax.DID      `json:"viewer"`
 	Offset   int              `json:"offset"`
 	Size     int              `json:"size"`
+	RecipeCategories		   []string  `json:"recipeCategories,omitempty"`
+	RecipeCuisines		   []string  `json:"recipeCuisines,omitempty"`
+	RecipeDiets			   []string  `json:"recipeDiets,omitempty"`
+	SearchType string // No json mapping - used internally
 }
 
 type ActorSearchParams struct {
@@ -101,6 +105,18 @@ func (p *PostSearchParams) Update(other *PostSearchParams) {
 	}
 	if len(p.Tags) == 0 {
 		p.Tags = other.Tags
+	}
+
+	if len(p.RecipeCategories) == 0 {
+		p.RecipeCategories = other.RecipeCategories
+	}
+
+	if len(p.RecipeCuisines) == 0 {
+		p.RecipeCuisines = other.RecipeCuisines
+	}
+
+	if len(p.RecipeDiets) == 0 {
+		p.RecipeDiets = other.RecipeDiets
 	}
 }
 
@@ -185,6 +201,30 @@ func (p *PostSearchParams) Filters() []map[string]interface{} {
 		})
 	}
 
+	if len(p.RecipeCategories) > 0 {
+		filters = append(filters, map[string]interface{}{
+			"terms": map[string]interface{}{
+				"recipeCategories":  p.RecipeCategories,
+			},
+		})
+	}
+
+	if len(p.RecipeCuisines) > 0 {
+		filters = append(filters, map[string]interface{}{
+			"terms": map[string]interface{}{
+				"recipeCuisines": p.RecipeCuisines,
+			},
+		})
+	}
+
+	if len(p.RecipeDiets) > 0 {
+		filters = append(filters, map[string]interface{}{
+			"terms": map[string]interface{}{
+				"recipeDiets": p.RecipeDiets,
+			},
+		})
+	}
+
 	return filters
 }
 
@@ -214,7 +254,13 @@ func checkParams(offset, size int) error {
 	return nil
 }
 
-func DoSearchPosts(ctx context.Context, dir identity.Directory, escli *es.Client, indices []string, params *PostSearchParams) (*EsSearchResponse, error) {
+type QueryIndices struct {
+	PostIndex string
+	RecipeIndex string
+} 
+
+// Params can either be passed via the query string (parsed by ParsePostQuery) or the params parameter.
+func DoSearchPosts(ctx context.Context, dir identity.Directory, escli *es.Client, indices QueryIndices, params *PostSearchParams) (*EsSearchResponse, error) {
 	ctx, span := tracer.Start(ctx, "DoSearchPosts")
 	defer span.End()
 
@@ -222,6 +268,7 @@ func DoSearchPosts(ctx context.Context, dir identity.Directory, escli *es.Client
 		return nil, err
 	}
 	queryStringParams := ParsePostQuery(ctx, dir, params.Query, params.Viewer)
+	// Shallow merge
 	params.Update(&queryStringParams)
 	idx := "everything"
 	if containsJapanese(params.Query) {
@@ -263,7 +310,12 @@ func DoSearchPosts(ctx context.Context, dir identity.Directory, escli *es.Client
 		"from": params.Offset,
 	}
 
-	return doSearch(ctx, escli, query, indices...)
+	requiredIndices := []string{indices.RecipeIndex}
+	if (queryStringParams.SearchType != "recipe") {
+		requiredIndices = append(requiredIndices, indices.PostIndex)
+	}
+
+	return doSearch(ctx, escli, query, requiredIndices...)
 }
 
 func DoSearchProfiles(ctx context.Context, dir identity.Directory, escli *es.Client, index string, params *ActorSearchParams) (*EsSearchResponse, error) {

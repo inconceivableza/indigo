@@ -282,7 +282,7 @@ func (s *Server) SearchPosts(ctx context.Context, params *PostSearchParams) (*ap
 	ctx, span := tracer.Start(ctx, "SearchPosts")
 	defer span.End()
 
-	resp, err := DoSearchPosts(ctx, s.dir, s.escli, []string{s.recipeIndex, s.postIndex}, params)
+	resp, err := DoSearchPosts(ctx, s.dir, s.escli, QueryIndices{RecipeIndex: s.recipeIndex, PostIndex: s.postIndex}, params)
 	if err != nil {
 		return nil, err
 	}

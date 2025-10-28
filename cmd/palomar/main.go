@@ -412,7 +412,7 @@ var searchPostCmd = &cli.Command{
 			context.Background(),
 			identity.DefaultDirectory(), // TODO: parse PLC arg
 			escli,
-			[]string{cctx.String("es-recipe-index"), cctx.String("es-post-index")},
+			search.QueryIndices{RecipeIndex: cctx.String("es-recipe-index"), PostIndex: cctx.String("es-post-index")},
 			&search.PostSearchParams{
 				Query:  strings.Join(cctx.Args().Slice(), " "),
 				Offset: 0,

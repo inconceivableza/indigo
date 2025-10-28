@@ -94,5 +94,12 @@ func TestParseQuery(t *testing.T) {
 		assert.Equal("did:plc:abc222", p.Author.String())
 	}
 
+	q10 := "test recipeCategories:CategoryLunch"
+	p = ParsePostQuery(ctx, &dir, q10, nil)
+	assert.Equal("test", p.Query)
+	assert.Equal(1, len(p.Filters()))
+	assert.Equal(1, len(p.RecipeCategories))
+	assert.Equal("CategoryLunch", p.RecipeCategories[0])
+
 	// TODO: more parsing tests: bare handles, to:, since:, until:, URL, domain:, lang
 }

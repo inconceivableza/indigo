@@ -130,6 +130,18 @@ func ParsePostQuery(ctx context.Context, dir identity.Directory, raw string, vie
 				params.Until = &dt
 			}
 			continue
+		case "recipeCategories":
+			params.RecipeCategories = strings.Split(tokParts[1], ",")
+			continue
+		case "recipeDiets":
+			params.RecipeDiets = strings.Split(tokParts[1], ",")
+			continue
+		case "recipeCuisines":
+			params.RecipeCuisines = strings.Split(tokParts[1], ",")
+			continue
+		case "searchType":
+			params.SearchType = tokParts[1]
+			continue
 		}
 
 		keep = append(keep, p)
