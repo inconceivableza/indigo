@@ -6,7 +6,7 @@ env:
   IMAGE_NAME: foodios-indigo-bgs
 
 jobs:
-  container-bigsky-aws:
+  build-and-push-bgs:
     if: github.repository == 'inconceivableza/indigo'
     runs-on: ubuntu-latest
     steps:
