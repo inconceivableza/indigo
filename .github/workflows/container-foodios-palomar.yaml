@@ -6,7 +6,7 @@ env:
   IMAGE_NAME: foodios-indigo-palomar
 
 jobs:
-  container-palomar-aws:
+  build-and-push-palomar:
     if: github.repository == 'inconceivableza/indigo'
     runs-on: ubuntu-latest
     steps:
