@@ -15,8 +15,9 @@ import (
 //
 // NOTE: configurable caching will likely be added in the future, but is not implemented yet. This struct may become an interface to support more flexible caching and resolution policies.
 type Resolver struct {
-	Client    *http.Client
-	UserAgent string
+	Client         *http.Client
+	InternalClient *http.Client
+	UserAgent      string
 }
 
 func NewResolver() *Resolver {
@@ -24,10 +25,23 @@ func NewResolver() *Resolver {
 		Timeout:   10 * time.Second,
 		Transport: ssrf.PublicOnlyTransport(),
 	}
-	return &Resolver{
-		Client:    &c,
-		UserAgent: "indigo-sdk",
+	ic := http.Client{
+		Timeout:   10 * time.Second,
+		Transport: ssrf.InternalOnlyTransport(),
 	}
+	return &Resolver{
+		Client:         &c,
+		InternalClient: &ic,
+		UserAgent:      "indigo-sdk",
+	}
+}
+
+func (r *Resolver) GetClient(hostURL *url.URL) *http.Client {
+	hostname := hostURL.Hostname()
+	if ssrf.IsInternalHostname(hostname) {
+		return r.InternalClient
+	}
+	return r.Client
 }
 
 // Resolves a Resource Server URL (eg, an atproto account's registered PDS service URL) to an auth server URL (eg, entryway URL). They might be the same server!
@@ -54,7 +68,7 @@ func (r *Resolver) ResolveAuthServerURL(ctx context.Context, hostURL string) (st
 		req.Header.Set("User-Agent", r.UserAgent)
 	}
 
-	resp, err := r.Client.Do(req)
+	resp, err := r.GetClient(u).Do(req)
 	if err != nil {
 		return "", fmt.Errorf("fetching protected resource document: %w", err)
 	}
@@ -105,7 +119,7 @@ func (r *Resolver) ResolveAuthServerMetadata(ctx context.Context, serverURL stri
 		req.Header.Set("User-Agent", r.UserAgent)
 	}
 
-	resp, err := r.Client.Do(req)
+	resp, err := r.GetClient(u).Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("fetching auth server metadata: %w", err)
 	}
@@ -147,7 +161,7 @@ func (r *Resolver) ResolveClientMetadata(ctx context.Context, clientID string) (
 		req.Header.Set("User-Agent", r.UserAgent)
 	}
 
-	resp, err := r.Client.Do(req)
+	resp, err := r.GetClient(u).Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("fetching client metadata: %w", err)
 	}

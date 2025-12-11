@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"math/rand"
+	"net"
 	"net/http"
 	"strings"
 	"sync"
@@ -299,7 +300,12 @@ func (s *Slurper) subscribeWithRedialer(ctx context.Context, host *models.Host, 
 
 	// if this isn't a localhost / private connection, then we should enable SSRF protections
 	if !host.NoSSL {
-		netDialer := ssrf.PublicOnlyDialer()
+		var netDialer *net.Dialer
+		if ssrf.IsInternalHostname(host.Hostname) {
+			netDialer = ssrf.InternalOnlyDialer()
+		} else {
+			netDialer = ssrf.PublicOnlyDialer()
+		}
 		d.NetDialContext = netDialer.DialContext
 	}
 

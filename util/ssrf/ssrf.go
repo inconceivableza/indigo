@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -48,6 +49,14 @@ var reservedIPv4Nets = []net.IPNet{
 	ipv4Net(240, 0, 0, 0, 4),     // Reserved (includes broadcast / 255.255.255.255)
 }
 
+var internalIPv4Nets = []net.IPNet{
+	ipv4Net(172, 24, 0, 0, 16), // inclan
+}
+
+var internalDomainSuffixes = []string{
+	".inclan",
+}
+
 var globalUnicastIPv6Net = net.IPNet{
 	IP:   net.IP{0x20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 	Mask: net.CIDRMask(3, 128),
@@ -72,6 +81,26 @@ func IsPublicIPAddress(address net.IP) bool {
 	} else {
 		return isIPv6GlobalUnicast(address)
 	}
+}
+
+func IsInternalIPAddress(address net.IP) bool {
+	if address.To4() != nil {
+		for _, internalNet := range internalIPv4Nets {
+			if internalNet.Contains(address) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func IsInternalHostname(host string) bool {
+	for _, suffix := range internalDomainSuffixes {
+		if strings.HasSuffix(host, suffix) {
+			return true
+		}
+	}
+	return false
 }
 
 // Implementation of [net.Dialer] `Control` field (a function) which avoids some SSRF attacks by rejecting local IPv4 and IPv6 address ranges, and only allowing ports 80 or 443.
@@ -101,6 +130,32 @@ func PublicOnlyControl(network string, address string, conn syscall.RawConn) err
 	return nil
 }
 
+func InternalOnlyControl(network string, address string, conn syscall.RawConn) error {
+	if !(network == "tcp4" || network == "tcp6") {
+		return fmt.Errorf("%s is not a safe network type", network)
+	}
+
+	host, port, err := net.SplitHostPort(address)
+	if err != nil {
+		return fmt.Errorf("%s is not a valid host/port pair: %s", address, err)
+	}
+
+	ipaddress := net.ParseIP(host)
+	if ipaddress == nil {
+		return fmt.Errorf("%s is not a valid IP address", host)
+	}
+
+	if !IsInternalIPAddress(ipaddress) {
+		return fmt.Errorf("%s is not an internal IP address", ipaddress)
+	}
+
+	if !(port == "80" || port == "443") {
+		return fmt.Errorf("%s is not a safe port number", port)
+	}
+
+	return nil
+}
+
 // [net.Dialer] with [PublicOnlyControl] for `Control` function (for SSRF protection). Other fields are same default values as standard library.
 func PublicOnlyDialer() *net.Dialer {
 	return &net.Dialer{
@@ -111,11 +166,33 @@ func PublicOnlyDialer() *net.Dialer {
 	}
 }
 
+func InternalOnlyDialer() *net.Dialer {
+	return &net.Dialer{
+		Timeout:   30 * time.Second,
+		KeepAlive: 30 * time.Second,
+		DualStack: true,
+		Control:   InternalOnlyControl,
+	}
+}
+
 // [http.Transport] with [PublicOnlyDialer] for `DialContext` field (for SSRF protection). Other fields are same default values as standard library.
 //
 // Use this in an [http.Client] like: `c := http.Client{ Transport: PublicOnlyTransport() }`
 func PublicOnlyTransport() *http.Transport {
 	dialer := PublicOnlyDialer()
+	return &http.Transport{
+		Proxy:                 http.ProxyFromEnvironment,
+		DialContext:           dialer.DialContext,
+		ForceAttemptHTTP2:     true,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	}
+}
+
+func InternalOnlyTransport() *http.Transport {
+	dialer := InternalOnlyDialer()
 	return &http.Transport{
 		Proxy:                 http.ProxyFromEnvironment,
 		DialContext:           dialer.DialContext,
