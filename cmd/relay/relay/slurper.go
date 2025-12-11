@@ -318,7 +318,8 @@ func (s *Slurper) subscribeWithRedialer(ctx context.Context, host *models.Host, 
 		}
 
 		u := host.SubscribeReposURL()
-		if cursor > 0 {
+		// starting with cursor == 0 lets a full backfill happen
+		if cursor >= 0 {
 			u = fmt.Sprintf("%s?cursor=%d", u, cursor)
 		}
 		hdr := make(http.Header)
