@@ -41,6 +41,7 @@ func (r *Relay) SubscribeToHost(ctx context.Context, hostname string, noSSL, adm
 			Status:       models.HostStatusActive,
 			Trusted:      trusted,
 			AccountLimit: accountLimit,
+			LastSeq:      0, // this will do a backfill from the start
 		}
 
 		if err := r.db.WithContext(ctx).Create(&host).Error; err != nil {
