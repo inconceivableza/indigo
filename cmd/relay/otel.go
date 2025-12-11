@@ -17,7 +17,13 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 )
 
-func setupOTEL(cctx *cli.Context) error {
+func setupOTEL(cctx *cli.Context) (func(), error) {
+	var cleanups []func()
+	cleanup := func()  {
+		for i := len(cleanups) - 1; i >= 0; i-- {
+			cleanups[i]()
+		}
+	}
 
 	env := cctx.String("env")
 	if env == "" {
@@ -28,8 +34,15 @@ func setupOTEL(cctx *cli.Context) error {
 		jaegerUrl := "http://localhost:14268/api/traces"
 		exp, err := jaeger.New(jaeger.WithCollectorEndpoint(jaeger.WithEndpoint(jaegerUrl)))
 		if err != nil {
-			return err
+			return cleanup, err
 		}
+		cleanups = append(cleanups, func() {
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+			defer cancel()
+			if err := exp.Shutdown(ctx); err != nil {
+				slog.Error("failed to shutdown jaeger trace exporter", "error", err)
+			}
+		})
 		tp := tracesdk.NewTracerProvider(
 			// Always be sure to batch in production.
 			tracesdk.WithBatcher(exp),
@@ -62,13 +75,13 @@ func setupOTEL(cctx *cli.Context) error {
 			slog.Error("failed to create trace exporter", "error", err)
 			os.Exit(1)
 		}
-		defer func() {
+		cleanups = append(cleanups, func() {
 			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 			defer cancel()
 			if err := exp.Shutdown(ctx); err != nil {
 				slog.Error("failed to shutdown trace exporter", "error", err)
 			}
-		}()
+		})
 
 		tp := tracesdk.NewTracerProvider(
 			tracesdk.WithBatcher(exp),
@@ -85,5 +98,5 @@ func setupOTEL(cctx *cli.Context) error {
 		otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
 	}
 
-	return nil
+	return cleanup, nil
 }
