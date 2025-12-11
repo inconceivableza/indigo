@@ -292,8 +292,11 @@ func runRelay(cctx *cli.Context) error {
 	}()
 
 	// start observability/tracing (OTEL and jaeger)
-	if err := setupOTEL(cctx); err != nil {
+	if cleanupOTEL, err := setupOTEL(cctx); err != nil {
+		cleanupOTEL()
 		return err
+	} else {
+		defer cleanupOTEL()
 	}
 	if cctx.Bool("enable-db-tracing") {
 		if err := db.Use(tracing.NewPlugin()); err != nil {
