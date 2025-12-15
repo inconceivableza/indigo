@@ -135,9 +135,10 @@ func (r *Relay) VerifyCommitMessageStrict(ctx context.Context, evt *comatproto.S
 	}
 
 	if evt.PrevData == nil {
-		return fmt.Errorf("missing prevData field")
+		logger.Warn("missing prevData field", "prevRepo.UID", prevRepo.UID, "prevRepo.Rev", prevRepo.Rev, "prevRepo.CommitCID", prevRepo.CommitCID, "prevRepo.CommitDataCID", prevRepo.CommitDataCID, "since", evt.Since, "rev", evt.Rev)
+		// return fmt.Errorf("missing prevData field")
 	}
-	if prevRepo != nil {
+	if prevRepo != nil && evt.PrevData != nil {
 		if evt.PrevData.String() != prevRepo.CommitDataCID {
 			logger.Warn("commit with miss-matching prevData", "prevData", evt.PrevData, "prevRepo.CommitDataCID", prevRepo.CommitDataCID)
 		}
