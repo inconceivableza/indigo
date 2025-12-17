@@ -98,6 +98,7 @@ func NewRelay(db *gorm.DB, evtman *eventmgr.EventManager, dir identity.Directory
 
 	slurpConfig := DefaultSlurperConfig()
 	slurpConfig.ConcurrencyPerHost = config.ConcurrencyPerHost
+	slurpConfig.DisableSSRFProtection = config.DisableSSRFProtection
 
 	// register callbacks to persist cursors and host state in database
 	slurpConfig.PersistCursorCallback = r.PersistHostCursors
