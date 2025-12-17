@@ -30,15 +30,25 @@ type HostClient struct {
 	Client         *http.Client
 	InternalClient *http.Client
 	UserAgent      string
+	DisableSSRF    bool
 }
 
-func NewHostClient(userAgent string) *HostClient {
+func NewHostClient(userAgent string, disableSSRF bool) *HostClient {
 	if userAgent == "" {
 		userAgent = "indigo-relay (atproto-relay)"
 	}
+
+	var transport *http.Transport
+	if disableSSRF {
+		// For local development: disable SSRF protection entirely
+		transport = ssrf.UnprotectedTransport()
+	} else {
+		transport = ssrf.PublicOnlyTransport()
+	}
+
 	c := http.Client{
 		Timeout:   5 * time.Second,
-		Transport: ssrf.PublicOnlyTransport(),
+		Transport: transport,
 	}
 	ic := http.Client{
 		Timeout:   5 * time.Second,
@@ -48,10 +58,16 @@ func NewHostClient(userAgent string) *HostClient {
 		Client:         &c,
 		InternalClient: &ic,
 		UserAgent:      userAgent,
+		DisableSSRF:    disableSSRF,
 	}
 }
 
 func (hc *HostClient) GetClient(host string) *http.Client {
+	// If SSRF is disabled, always use the unprotected client
+	if hc.DisableSSRF {
+		return hc.Client
+	}
+	// Otherwise, use internal client for internal hostnames
 	if ssrf.IsInternalHostname(host) {
 		return hc.InternalClient
 	}

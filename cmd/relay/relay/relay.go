@@ -48,6 +48,9 @@ type RelayConfig struct {
 
 	// If true, skip validation that messages for a given account (DID) are coming from the expected upstream host (PDS). Currently only used in tests; might be used for intermediate relays in the future.
 	SkipAccountHostCheck bool
+
+	// If true, disable SSRF protection (allows connections to private IPs). Only use in local development.
+	DisableSSRFProtection bool
 }
 
 func DefaultRelayConfig() *RelayConfig {
@@ -69,7 +72,7 @@ func NewRelay(db *gorm.DB, evtman *eventmgr.EventManager, dir identity.Directory
 
 	uc, _ := lru.New[string, *models.Account](2_000_000)
 
-	hc := NewHostClient(config.UserAgent)
+	hc := NewHostClient(config.UserAgent, config.DisableSSRFProtection)
 
 	// NOTE: discarded second argument is not an `error` type
 

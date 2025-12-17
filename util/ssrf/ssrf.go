@@ -203,3 +203,23 @@ func InternalOnlyTransport() *http.Transport {
 		ExpectContinueTimeout: 1 * time.Second,
 	}
 }
+
+// [http.Transport] with no SSRF protection (for local development only).
+// WARNING: This allows connections to any IP address including private/internal addresses.
+// Only use this in development environments.
+func UnprotectedTransport() *http.Transport {
+	dialer := &net.Dialer{
+		Timeout:   30 * time.Second,
+		KeepAlive: 30 * time.Second,
+		DualStack: true,
+	}
+	return &http.Transport{
+		Proxy:                 http.ProxyFromEnvironment,
+		DialContext:           dialer.DialContext,
+		ForceAttemptHTTP2:     true,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	}
+}
