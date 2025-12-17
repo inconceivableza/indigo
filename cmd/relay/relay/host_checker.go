@@ -23,44 +23,41 @@ type HostChecker interface {
 
 var _ HostChecker = (*HostClient)(nil)
 
-// Allows SSRF to succeed on listed internal domain names if they resolve to listed internal IP address ranges,
-// without compromising SSRF on other public hostnames.
-
 type HostClient struct {
 	Client         *http.Client
-	InternalClient *http.Client
 	UserAgent      string
 }
 
-func NewHostClient(userAgent string) *HostClient {
+func NewHostClient(userAgent string, disableSSRF bool) *HostClient {
 	if userAgent == "" {
 		userAgent = "indigo-relay (atproto-relay)"
 	}
+
+	var transport *http.Transport
+	if disableSSRF {
+		// For local development: disable SSRF protection entirely
+		transport = ssrf.UnprotectedTransport()
+	} else {
+		transport = ssrf.PublicOnlyTransport()
+	}
+
 	c := http.Client{
 		Timeout:   5 * time.Second,
-		Transport: ssrf.PublicOnlyTransport(),
-	}
-	ic := http.Client{
-		Timeout:   5 * time.Second,
-		Transport: ssrf.InternalOnlyTransport(),
+		Transport: transport,
 	}
 	return &HostClient{
 		Client:         &c,
-		InternalClient: &ic,
 		UserAgent:      userAgent,
 	}
 }
 
 func (hc *HostClient) GetClient(host string) *http.Client {
-	if ssrf.IsInternalHostname(host) {
-		return hc.InternalClient
-	}
 	return hc.Client
 }
 
 func (hc *HostClient) CheckHost(ctx context.Context, host string) error {
 	xrpcc := xrpc.Client{
-		Client:    hc.GetClient(host),
+		Client:    hc.Client,
 		UserAgent: &hc.UserAgent,
 		Host:      host,
 	}
@@ -79,7 +76,7 @@ func (hc *HostClient) FetchAccountStatus(ctx context.Context, ident *identity.Id
 	}
 
 	xrpcc := xrpc.Client{
-		Client:    hc.GetClient(pdsEndpoint),
+		Client:    hc.Client,
 		UserAgent: &hc.UserAgent,
 		Host:      pdsEndpoint,
 	}

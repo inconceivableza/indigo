@@ -88,7 +88,7 @@ func runPullHosts(cctx *cli.Context) error {
 		return err
 	}
 
-	checker := relay.NewHostClient(relayConfig.UserAgent)
+	checker := relay.NewHostClient(relayConfig.UserAgent, relayConfig.DisableSSRFProtection)
 
 	cursor := ""
 	size := cctx.Int64("batch-size")

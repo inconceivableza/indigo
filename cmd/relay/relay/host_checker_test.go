@@ -38,7 +38,7 @@ func TestLiveHostChecker(t *testing.T) {
 	var err error
 
 	dir := identity.DefaultDirectory()
-	hc := NewHostClient("indigo-tests")
+	hc := NewHostClient("indigo-tests", false)
 
 	assert.NoError(hc.CheckHost(ctx, "https://morel.us-east.host.bsky.network"))
 	assert.Error(hc.CheckHost(ctx, "https://dummy.example.com"))

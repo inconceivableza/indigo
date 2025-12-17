@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log/slog"
 	"math/rand"
-	"net"
 	"net/http"
 	"strings"
 	"sync"
@@ -57,6 +56,9 @@ type SlurperConfig struct {
 	TrustedPerSecondLimit  int64
 	TrustedPerHourLimit    int64
 	TrustedPerDayLimit     int64
+
+	// If true, disable SSRF protection for websocket connections. Only use in local development.
+	DisableSSRFProtection bool
 
 	// callback functions. technically optional but effectively required
 	PersistCursorCallback     PersistCursorFunc
@@ -299,13 +301,9 @@ func (s *Slurper) subscribeWithRedialer(ctx context.Context, host *models.Host, 
 	}
 
 	// if this isn't a localhost / private connection, then we should enable SSRF protections
-	if !host.NoSSL {
-		var netDialer *net.Dialer
-		if ssrf.IsInternalHostname(host.Hostname) {
-			netDialer = ssrf.InternalOnlyDialer()
-		} else {
-			netDialer = ssrf.PublicOnlyDialer()
-		}
+	// unless SSRF protection is explicitly disabled (for local development)
+	if !host.NoSSL && !s.Config.DisableSSRFProtection {
+		netDialer := ssrf.PublicOnlyDialer()
 		d.NetDialContext = netDialer.DialContext
 	}
 

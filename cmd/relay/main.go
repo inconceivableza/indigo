@@ -134,6 +134,11 @@ func run(args []string) error {
 					Usage:   "when messages fail atproto 'Sync 1.1' validation, just log, don't drop",
 					EnvVars: []string{"RELAY_LENIENT_SYNC_VALIDATION"},
 				},
+				&cli.BoolFlag{
+					Name:    "disable-ssrf-protection",
+					Usage:   "disable SSRF protection (allows private IPs) - FOR LOCAL DEVELOPMENT ONLY",
+					EnvVars: []string{"RELAY_DISABLE_SSRF_PROTECTION", "DEBUG_MODE"},
+				},
 				&cli.IntFlag{
 					Name:    "initial-seq-number",
 					Usage:   "when initializing output firehose, start with this sequence number",
@@ -252,6 +257,7 @@ func runRelay(cctx *cli.Context) error {
 	relayConfig.HostPerDayLimit = cctx.Int64("new-hosts-per-day-limit")
 	relayConfig.TrustedDomains = cctx.StringSlice("trusted-domains")
 	relayConfig.LenientSyncValidation = cctx.Bool("lenient-sync-validation")
+	relayConfig.DisableSSRFProtection = cctx.Bool("disable-ssrf-protection")
 
 	svcConfig := DefaultServiceConfig()
 	svcConfig.AllowInsecureHosts = cctx.Bool("allow-insecure-hosts")
