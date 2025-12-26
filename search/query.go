@@ -311,7 +311,7 @@ func DoSearchPosts(ctx context.Context, dir identity.Directory, escli *es.Client
 	}
 
 	requiredIndices := []string{indices.RecipeIndex}
-	if (queryStringParams.SearchType == "all" || queryStringParams.SearchType == "") {
+	if (queryStringParams.SearchType != "recipes") {
 		requiredIndices = append(requiredIndices, indices.PostIndex)
 	}
 
