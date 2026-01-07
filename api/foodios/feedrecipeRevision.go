@@ -30,7 +30,7 @@ type FeedRecipeRevision struct {
 	Embed     *FeedRecipeRevision_Embed `json:"embed,omitempty" cborgen:"embed,omitempty"`
 	// facets: Annotations of text (mentions, URLs, hashtags, etc)
 	Facets              []*appbskytypes.RichtextFacet            `json:"facets,omitempty" cborgen:"facets,omitempty"`
-	Ingredients         []*FeedRecipeRevision_Ingredient         `json:"ingredients" cborgen:"ingredients"`
+	IngredientSections  []*FeedRecipeRevision_IngredientSection  `json:"ingredientSections" cborgen:"ingredientSections"`
 	InstructionSections []*FeedRecipeRevision_InstructionSection `json:"instructionSections" cborgen:"instructionSections"`
 	// labels: Self-label values for this post. Effectively content warnings.
 	Labels *FeedRecipeRevision_Labels `json:"labels,omitempty" cborgen:"labels,omitempty"`
@@ -295,6 +295,12 @@ type FeedRecipeRevision_Ingredient struct {
 	Name     string                                `json:"name" cborgen:"name"`
 	Quantity string                                `json:"quantity" cborgen:"quantity"`
 	Unit     string                                `json:"unit" cborgen:"unit"`
+}
+
+// FeedRecipeRevision_IngredientSection is a "ingredientSection" in the app.foodios.feed.recipeRevision schema.
+type FeedRecipeRevision_IngredientSection struct {
+	Ingredients []*FeedRecipeRevision_Ingredient `json:"ingredients" cborgen:"ingredients"`
+	Name        *string                          `json:"name,omitempty" cborgen:"name,omitempty"`
 }
 
 type FeedRecipeRevision_Ingredient_Images struct {
@@ -571,12 +577,12 @@ func (t *FeedRecipeRevision_Labels) UnmarshalCBOR(r io.Reader) error {
 
 // FeedRecipeRevision_Nutrition is a "nutrition" in the app.foodios.feed.recipeRevision schema.
 type FeedRecipeRevision_Nutrition struct {
-	// carbohydrateContent: Energy in kJ
+	// carbohydrateContent: Carbohydrate in g
 	CarbohydrateContent *string `json:"carbohydrateContent,omitempty" cborgen:"carbohydrateContent,omitempty"`
 	// cholesterolContent: Cholesterol in mg
 	CholesterolContent *string `json:"cholesterolContent,omitempty" cborgen:"cholesterolContent,omitempty"`
 	// energy: Energy in kJ
-	Energy string `json:"energy" cborgen:"energy"`
+	Energy *string `json:"energy,omitempty" cborgen:"energy,omitempty"`
 	// fatContent: Fat per serving in g
 	FatContent *string `json:"fatContent,omitempty" cborgen:"fatContent,omitempty"`
 	// fiberContent: Fat per serving in g
@@ -670,7 +676,7 @@ func (t *FeedRecipeRevision_OriginalAttribution_License) UnmarshalJSON(b []byte)
 		return json.Unmarshal(b, t.FeedDefs_LicensePublicDomain)
 
 	default:
-		return nil
+		return fmt.Errorf("closed enums must have a matching value")
 	}
 }
 
@@ -727,7 +733,7 @@ func (t *FeedRecipeRevision_OriginalAttribution_License) UnmarshalCBOR(r io.Read
 		return t.FeedDefs_LicensePublicDomain.UnmarshalCBOR(bytes.NewReader(b))
 
 	default:
-		return nil
+		return fmt.Errorf("closed enums must have a matching value")
 	}
 }
 
@@ -802,7 +808,7 @@ func (t *FeedRecipeRevision_PublicationAttribution_PublicationType) UnmarshalJSO
 		return json.Unmarshal(b, t.FeedDefs_PublicationTypeMagazine)
 
 	default:
-		return nil
+		return fmt.Errorf("closed enums must have a matching value")
 	}
 }
 
@@ -835,7 +841,7 @@ func (t *FeedRecipeRevision_PublicationAttribution_PublicationType) UnmarshalCBO
 		return t.FeedDefs_PublicationTypeMagazine.UnmarshalCBOR(bytes.NewReader(b))
 
 	default:
-		return nil
+		return fmt.Errorf("closed enums must have a matching value")
 	}
 }
 
@@ -863,9 +869,134 @@ type FeedRecipeRevision_ShowAttribution struct {
 //
 // RECORDTYPE: FeedRecipeRevision_WebsiteAttribution
 type FeedRecipeRevision_WebsiteAttribution struct {
-	LexiconTypeID string  `json:"$type,const=app.foodios.feed.recipeRevision#websiteAttribution" cborgen:"$type,const=app.foodios.feed.recipeRevision#websiteAttribution"`
-	Name          string  `json:"name" cborgen:"name"`
-	Notes         *string `json:"notes,omitempty" cborgen:"notes,omitempty"`
-	Type          string  `json:"type" cborgen:"type"`
-	Url           string  `json:"url" cborgen:"url"`
+	LexiconTypeID string                                         `json:"$type,const=app.foodios.feed.recipeRevision#websiteAttribution" cborgen:"$type,const=app.foodios.feed.recipeRevision#websiteAttribution"`
+	License       *FeedRecipeRevision_WebsiteAttribution_License `json:"license,omitempty" cborgen:"license,omitempty"`
+	Name          string                                         `json:"name" cborgen:"name"`
+	Notes         *string                                        `json:"notes,omitempty" cborgen:"notes,omitempty"`
+	Type          string                                         `json:"type" cborgen:"type"`
+	Url           string                                         `json:"url" cborgen:"url"`
+}
+
+type FeedRecipeRevision_WebsiteAttribution_License struct {
+	FeedDefs_LicenseAllRights             *FeedDefs_LicenseAllRights
+	FeedDefs_LicenseCreativeCommonsBy     *FeedDefs_LicenseCreativeCommonsBy
+	FeedDefs_LicenseCreativeCommonsBySa   *FeedDefs_LicenseCreativeCommonsBySa
+	FeedDefs_LicenseCreativeCommonsByNc   *FeedDefs_LicenseCreativeCommonsByNc
+	FeedDefs_LicenseCreativeCommonsByNcSa *FeedDefs_LicenseCreativeCommonsByNcSa
+	FeedDefs_LicensePublicDomain          *FeedDefs_LicensePublicDomain
+}
+
+func (t *FeedRecipeRevision_WebsiteAttribution_License) MarshalJSON() ([]byte, error) {
+	if t.FeedDefs_LicenseAllRights != nil {
+		t.FeedDefs_LicenseAllRights.LexiconTypeID = "app.foodios.feed.defs#licenseAllRights"
+		return json.Marshal(t.FeedDefs_LicenseAllRights)
+	}
+	if t.FeedDefs_LicenseCreativeCommonsBy != nil {
+		t.FeedDefs_LicenseCreativeCommonsBy.LexiconTypeID = "app.foodios.feed.defs#licenseCreativeCommonsBy"
+		return json.Marshal(t.FeedDefs_LicenseCreativeCommonsBy)
+	}
+	if t.FeedDefs_LicenseCreativeCommonsBySa != nil {
+		t.FeedDefs_LicenseCreativeCommonsBySa.LexiconTypeID = "app.foodios.feed.defs#licenseCreativeCommonsBySa"
+		return json.Marshal(t.FeedDefs_LicenseCreativeCommonsBySa)
+	}
+	if t.FeedDefs_LicenseCreativeCommonsByNc != nil {
+		t.FeedDefs_LicenseCreativeCommonsByNc.LexiconTypeID = "app.foodios.feed.defs#licenseCreativeCommonsByNc"
+		return json.Marshal(t.FeedDefs_LicenseCreativeCommonsByNc)
+	}
+	if t.FeedDefs_LicenseCreativeCommonsByNcSa != nil {
+		t.FeedDefs_LicenseCreativeCommonsByNcSa.LexiconTypeID = "app.foodios.feed.defs#licenseCreativeCommonsByNcSa"
+		return json.Marshal(t.FeedDefs_LicenseCreativeCommonsByNcSa)
+	}
+	if t.FeedDefs_LicensePublicDomain != nil {
+		t.FeedDefs_LicensePublicDomain.LexiconTypeID = "app.foodios.feed.defs#licensePublicDomain"
+		return json.Marshal(t.FeedDefs_LicensePublicDomain)
+	}
+	return nil, fmt.Errorf("cannot marshal empty enum")
+}
+func (t *FeedRecipeRevision_WebsiteAttribution_License) UnmarshalJSON(b []byte) error {
+	typ, err := util.TypeExtract(b)
+	if err != nil {
+		return err
+	}
+
+	switch typ {
+	case "app.foodios.feed.defs#licenseAllRights":
+		t.FeedDefs_LicenseAllRights = new(FeedDefs_LicenseAllRights)
+		return json.Unmarshal(b, t.FeedDefs_LicenseAllRights)
+	case "app.foodios.feed.defs#licenseCreativeCommonsBy":
+		t.FeedDefs_LicenseCreativeCommonsBy = new(FeedDefs_LicenseCreativeCommonsBy)
+		return json.Unmarshal(b, t.FeedDefs_LicenseCreativeCommonsBy)
+	case "app.foodios.feed.defs#licenseCreativeCommonsBySa":
+		t.FeedDefs_LicenseCreativeCommonsBySa = new(FeedDefs_LicenseCreativeCommonsBySa)
+		return json.Unmarshal(b, t.FeedDefs_LicenseCreativeCommonsBySa)
+	case "app.foodios.feed.defs#licenseCreativeCommonsByNc":
+		t.FeedDefs_LicenseCreativeCommonsByNc = new(FeedDefs_LicenseCreativeCommonsByNc)
+		return json.Unmarshal(b, t.FeedDefs_LicenseCreativeCommonsByNc)
+	case "app.foodios.feed.defs#licenseCreativeCommonsByNcSa":
+		t.FeedDefs_LicenseCreativeCommonsByNcSa = new(FeedDefs_LicenseCreativeCommonsByNcSa)
+		return json.Unmarshal(b, t.FeedDefs_LicenseCreativeCommonsByNcSa)
+	case "app.foodios.feed.defs#licensePublicDomain":
+		t.FeedDefs_LicensePublicDomain = new(FeedDefs_LicensePublicDomain)
+		return json.Unmarshal(b, t.FeedDefs_LicensePublicDomain)
+
+	default:
+		return fmt.Errorf("closed enums must have a matching value")
+	}
+}
+
+func (t *FeedRecipeRevision_WebsiteAttribution_License) MarshalCBOR(w io.Writer) error {
+
+	if t == nil {
+		_, err := w.Write(cbg.CborNull)
+		return err
+	}
+	if t.FeedDefs_LicenseAllRights != nil {
+		return t.FeedDefs_LicenseAllRights.MarshalCBOR(w)
+	}
+	if t.FeedDefs_LicenseCreativeCommonsBy != nil {
+		return t.FeedDefs_LicenseCreativeCommonsBy.MarshalCBOR(w)
+	}
+	if t.FeedDefs_LicenseCreativeCommonsBySa != nil {
+		return t.FeedDefs_LicenseCreativeCommonsBySa.MarshalCBOR(w)
+	}
+	if t.FeedDefs_LicenseCreativeCommonsByNc != nil {
+		return t.FeedDefs_LicenseCreativeCommonsByNc.MarshalCBOR(w)
+	}
+	if t.FeedDefs_LicenseCreativeCommonsByNcSa != nil {
+		return t.FeedDefs_LicenseCreativeCommonsByNcSa.MarshalCBOR(w)
+	}
+	if t.FeedDefs_LicensePublicDomain != nil {
+		return t.FeedDefs_LicensePublicDomain.MarshalCBOR(w)
+	}
+	return fmt.Errorf("cannot cbor marshal empty enum")
+}
+func (t *FeedRecipeRevision_WebsiteAttribution_License) UnmarshalCBOR(r io.Reader) error {
+	typ, b, err := util.CborTypeExtractReader(r)
+	if err != nil {
+		return err
+	}
+
+	switch typ {
+	case "app.foodios.feed.defs#licenseAllRights":
+		t.FeedDefs_LicenseAllRights = new(FeedDefs_LicenseAllRights)
+		return t.FeedDefs_LicenseAllRights.UnmarshalCBOR(bytes.NewReader(b))
+	case "app.foodios.feed.defs#licenseCreativeCommonsBy":
+		t.FeedDefs_LicenseCreativeCommonsBy = new(FeedDefs_LicenseCreativeCommonsBy)
+		return t.FeedDefs_LicenseCreativeCommonsBy.UnmarshalCBOR(bytes.NewReader(b))
+	case "app.foodios.feed.defs#licenseCreativeCommonsBySa":
+		t.FeedDefs_LicenseCreativeCommonsBySa = new(FeedDefs_LicenseCreativeCommonsBySa)
+		return t.FeedDefs_LicenseCreativeCommonsBySa.UnmarshalCBOR(bytes.NewReader(b))
+	case "app.foodios.feed.defs#licenseCreativeCommonsByNc":
+		t.FeedDefs_LicenseCreativeCommonsByNc = new(FeedDefs_LicenseCreativeCommonsByNc)
+		return t.FeedDefs_LicenseCreativeCommonsByNc.UnmarshalCBOR(bytes.NewReader(b))
+	case "app.foodios.feed.defs#licenseCreativeCommonsByNcSa":
+		t.FeedDefs_LicenseCreativeCommonsByNcSa = new(FeedDefs_LicenseCreativeCommonsByNcSa)
+		return t.FeedDefs_LicenseCreativeCommonsByNcSa.UnmarshalCBOR(bytes.NewReader(b))
+	case "app.foodios.feed.defs#licensePublicDomain":
+		t.FeedDefs_LicensePublicDomain = new(FeedDefs_LicensePublicDomain)
+		return t.FeedDefs_LicensePublicDomain.UnmarshalCBOR(bytes.NewReader(b))
+
+	default:
+		return fmt.Errorf("closed enums must have a matching value")
+	}
 }

@@ -143,9 +143,11 @@ func TransformProfile(profile *appbsky.ActorProfile, ident *identity.Identity, c
 
 // TODO: define interface containing shared fields between posts and recipes for indexing the common fields
 func TransformRecipe(post *foodios.FeedRecipeRevision, did syntax.DID, rkey, cid string) RecipeRevisionDoc  {
-	var ingredients = make([]string, len(post.Ingredients))
-	for _, ingredient := range post.Ingredients {
-		ingredients = append(ingredients, ingredient.Name)
+	var ingredients = make([]string, 0, 20)
+	for _, section := range post.IngredientSections {
+		for _, ingredient := range section.Ingredients {
+			ingredients = append(ingredients, ingredient.Name)
+		}
 	}
 
 	var instructions = make([]string, 0, 20)

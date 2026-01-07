@@ -62,6 +62,7 @@ func main() {
 		foodios.FeedRecipeRevision_ProductAttribution{},
 		foodios.FeedRecipeRevision_PersonAttribution{},
 		foodios.FeedRecipeRevision_OriginalAttribution{},
+		foodios.FeedRecipeRevision_IngredientSection{},
 		foodios.FeedDefs_LicenseAllRights{},
 		foodios.FeedDefs_LicenseCreativeCommonsBy{},
 		foodios.FeedDefs_LicenseCreativeCommonsByNc{},
