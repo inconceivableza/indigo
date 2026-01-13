@@ -1,48 +1,100 @@
 name: Build and push foodios-indigo-palomar
 on:
   workflow_dispatch
+
 env:
   DOCKERHUB_REPO: ${{ vars.DOCKERHUB_REPO }}
   IMAGE_NAME: foodios-indigo-palomar
 
 jobs:
-  build-and-push-palomar:
+  build:
     if: github.repository == 'inconceivableza/indigo'
+    runs-on: ${{ matrix.platform == 'linux/arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
+    strategy:
+      matrix:
+        platform:
+          - linux/amd64
+          - linux/arm64
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Docker buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log into dockerhub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USER }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Prepare platform tag
+        id: platform
+        run: |
+          platform=${{ matrix.platform }}
+          echo "tag=${platform//\//-}" >> $GITHUB_OUTPUT
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            ${{ env.DOCKERHUB_REPO }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,enable=true,priority=100,prefix=,suffix=-${{ steps.platform.outputs.tag }},format=long
+
+      - name: Build and push Docker image
+        id: build-and-push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: ${{ matrix.platform }}
+          file: ./cmd/palomar/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: |
+            type=registry,ref=${{ env.DOCKERHUB_REPO }}/${{ env.IMAGE_NAME }}:buildcache-${{ steps.platform.outputs.tag }}
+            type=registry,ref=${{ env.DOCKERHUB_REPO }}/${{ env.IMAGE_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.DOCKERHUB_REPO }}/${{ env.IMAGE_NAME }}:buildcache-${{ steps.platform.outputs.tag }},mode=max
+    outputs:
+      digest-amd64: ${{ matrix.platform == 'linux/amd64' && steps.build-and-push.outputs.digest || '' }}
+      digest-arm64: ${{ matrix.platform == 'linux/arm64' && steps.build-and-push.outputs.digest || '' }}
+
+  create-manifest:
+    if: github.repository == 'inconceivableza/indigo' && github.event_name != 'pull_request'
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: actions/checkout@v4
 
       - name: Setup Docker buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3
 
       - name: Log into dockerhub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USER }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Extract Docker metadata
         id: meta
-        uses: docker/metadata-action@v4
+        uses: docker/metadata-action@v5
         with:
           images: |
             ${{ env.DOCKERHUB_REPO }}/${{ env.IMAGE_NAME }}
           tags: |
             type=sha,enable=true,priority=100,prefix=,suffix=,format=long
 
-      - name: Build and push Docker image
-        id: build-and-push
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          platforms: linux/amd64,linux/arm64
-          file: ./cmd/palomar/Dockerfile
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+      - name: Create and push multi-platform manifest
+        run: |
+          # Get the tag without platform suffix
+          TAG=$(echo "${{ steps.meta.outputs.tags }}" | head -n 1)
+
+          # Create manifest from platform-specific images
+          docker buildx imagetools create -t ${TAG} \
+            ${{ env.DOCKERHUB_REPO }}/${{ env.IMAGE_NAME }}:$(git rev-parse HEAD)-linux-amd64 \
+            ${{ env.DOCKERHUB_REPO }}/${{ env.IMAGE_NAME }}:$(git rev-parse HEAD)-linux-arm64
+
+          echo "Created multi-platform manifest: ${TAG}"
