@@ -24,6 +24,11 @@ func (s *Service) handleComAtprotoSyncRequestCrawl(c echo.Context, body *comatpr
 	}
 
 	hostname, noSSL, err := relay.ParseHostname(body.Hostname)
+
+	if !relay.IsTrustedHostname(hostname, s.relay.Config.TrustedDomains) {
+		return c.JSON(http.StatusForbidden, xrpc.XRPCError{ErrStr: "Forbidden", Message: "untrusted hostname not allowed on this relay"})
+	}
+
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, xrpc.XRPCError{ErrStr: "BadRequest", Message: fmt.Sprintf("hostname field empty or invalid: %s", body.Hostname)})
 	}
